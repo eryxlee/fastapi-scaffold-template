@@ -1,15 +1,20 @@
+# -*- coding: utf-8 -*-
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-# from app.dependencies import get_current_user  # 假设这里定义了依赖项
-from app.api import api_router  # 假设这里定义了路由
-from app.models import engine, Base  # 假设这是数据库相关配置
-# from app.models import User  # 假设这是你的用户模型
+
+from app.api import api_router
+from app.models import engine, Base
+from app.config import get_app_config
+
+
+settings = get_app_config()
 
 # 创建 FastAPI 应用实例
 app = FastAPI(
-    title="My FastAPI App",
-    version="0.1.0",
-    description="This is a very fancy app made with FastAPI",
+    title=settings.app_name,
+    version=settings.app_version,
+    description=settings.app_description,
 )
 
 # # 添加 CORS 中间件
@@ -44,9 +49,3 @@ async def startup_event():
 
 # 将路由添加到应用中
 app.include_router(api_router)
-app
-
-# 启动应用
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
