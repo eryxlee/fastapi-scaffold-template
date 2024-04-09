@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*-
 
+import pkgutil
+from importlib import import_module
 from fastapi import APIRouter
-
-from app.api.todo.views import router as todo_router
-from app.api.user.views import router as user_router
 
 api_router = APIRouter()
 
 
-# api_router.include_router(login.router, tags=["login"])
-api_router.include_router(user_router, prefix="/user", tags=["user"])
-api_router.include_router(todo_router, prefix="/todo", tags=["todo"])
-# api_router.include_router(utils.router, prefix="/utils", tags=["utils"])
+# 导入所有的子模块
+for module in pkgutil.iter_modules(['app/api']):
+    if not module.ispkg:
+        continue
+
+    sub_api = import_module(f'app.api.{module.name}.views')
+    api_router.include_router(sub_api.router, prefix=f"/{module.name}", tags=[module.name])
 
 @api_router.get("/")
 async def hello():
