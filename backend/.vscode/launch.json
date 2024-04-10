@@ -11,7 +11,8 @@
             "module": "uvicorn",
             "args": [
                 "app.main:app",
-                "--reload"
+                "--reload",
+                "--log-config=log_conf.yaml"
             ],
             "jinja": true
         }
