@@ -6,8 +6,8 @@ class User(Base):
     __tablename__ = "user"
 
     id = Column(Integer, primary_key=True, index=True)
-    email = Column(String, unique=True, index=True)
-    hashed_password = Column(String)
+    email = Column(String(64), unique=True, index=True)
+    hashed_password = Column(String(64))
     is_active = Column(Boolean, default=True)
 
     # 用户与TODO的关联关系可以在这里定义

@@ -8,6 +8,8 @@ from pydantic import (
     BeforeValidator,
     HttpUrl,
     PostgresDsn,
+    MySQLDsn,
+    MariaDBDsn,
     computed_field,
     model_validator,
 )
@@ -69,6 +71,18 @@ class AppConfigSettings(BaseSettings):
     def POSTGRES_DATABASE_URI(self) -> PostgresDsn:
         return MultiHostUrl.build(
             scheme="postgresql+psycopg",
+            username=self.DB_USER,
+            password=self.DB_PASSWORD,
+            host=self.DB_HOST,
+            port=self.DB_PORT,
+            path=self.DB_DATABASE,
+        )
+
+    @computed_field
+    @property
+    def MARIADB_DATABASE_URI(self) -> MariaDBDsn:
+        return MultiHostUrl.build(
+            scheme="mysql+pymysql",
             username=self.DB_USER,
             password=self.DB_PASSWORD,
             host=self.DB_HOST,
