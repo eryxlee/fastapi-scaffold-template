@@ -47,4 +47,4 @@ async def startup_event():
 #     pass
 
 # 将路由添加到应用中
-app.include_router(api_router)
+app.include_router(api_router, prefix=settings.API_PREFIX)
