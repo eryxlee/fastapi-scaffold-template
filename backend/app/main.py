@@ -5,34 +5,33 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import api_router
 from app.models import engine, Base
-from app.config import get_app_config
+from app.config import settings
 
+from app.extensions.fastapi.middleware import TimingMiddleware, MetaDataAdderMiddleware
+from app.extensions.fastapi.exception import GlobalExceptionHandler
 
-settings = get_app_config()
 
 # 创建 FastAPI 应用实例
 app = FastAPI(
-    title=settings.app_name,
-    version=settings.app_version,
-    description=settings.app_description,
+    title=settings.APP_NAME,
+    version=settings.APP_VERSION,
+    description=settings.APP_DESCRIPTION,
 )
 
-# # 添加 CORS 中间件
-# origins = [
-#     "http://localhost",
-#     "http://localhost:8080",
-# ]
-
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=origins,
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
-
-# # 假设我们有一个全局的数据库会话
-# Session = sessionmaker(bind=engine, autocommit=False, autoflush=False)
+# 添加api运行计时中间件
+app.add_middleware(TimingMiddleware)
+# 添加元数据中间件（统一API输出结构）
+app.add_middleware(MetaDataAdderMiddleware)
+# 添加 CORS 中间件
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+# 统一异常输出结构
+GlobalExceptionHandler(app).init()
 
 # 应用启动事件监听器
 @app.on_event("startup")

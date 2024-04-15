@@ -3,7 +3,7 @@
 import click
 import uvicorn
 
-from app.config import load_config_file
+from dotenv import load_dotenv
 
 
 @click.group()
@@ -26,9 +26,6 @@ def cli():
 
     # uvicorn 启动，使用.env.test配置, 没有加载log配置 \n
     uvicorn app.main:app --env-file=.env.test \n
-
-    # uvicorn 直接启动，使用.env.test配置, 加载log配置 \n
-    APP_ENV="test" uvicorn app.main:app --log-config=log_conf.yaml \n
     """
 
 
@@ -36,13 +33,15 @@ def cli():
 @click.option('--env-file', default=".env", help='Project settings file.')
 @click.option('--log-config', default="log_conf.yaml", help='Project logging settings file.')
 def start(env_file, log_config):
-    load_config_file(env_file)
+    load_dotenv(env_file)
 
-    from app.main import app, settings
+    from app.config import settings
+    from app.main import app
+
     uvicorn.run(
         app,
-        host=settings.app_host,
-        port=settings.app_port,
+        host=settings.APP_HOST,
+        port=settings.APP_PORT,
         log_config=log_config
     )
 
