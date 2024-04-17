@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import secrets
 
-from typing import Annotated, Any, Literal
+from typing import Annotated, Any, Literal, Optional
 from pydantic import Field, RedisDsn
 from pydantic import (
     AnyUrl,
@@ -43,6 +43,9 @@ class AppConfigSettings(BaseSettings):
     HOST: str = "0.0.0.0"
     PORT: int = 8080
     DOMAIN: str = "localhost"
+    OPENAPI_URL: Optional[str] = None,  # 属性值设置为 None 时，表示不开启
+    DOCS_URL: Optional[str] = None,  # 属性值设置为 None 时，表示不开启
+    REDOC_URL: Optional[str] = None  # 属性值设置为 None 时，表示不开启
 
     @computed_field
     @property

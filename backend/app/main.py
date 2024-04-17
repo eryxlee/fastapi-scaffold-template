@@ -16,6 +16,9 @@ app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
     description=settings.APP_DESCRIPTION,
+    openapi_url=settings.OPENAPI_URL,
+    docs_url=settings.DOCS_URL,
+    redoc_url=settings.REDOC_URL
 )
 
 # 添加api运行计时中间件
