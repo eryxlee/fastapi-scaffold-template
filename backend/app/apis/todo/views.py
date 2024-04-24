@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.models import get_db
-from app.api.todo import schemas, services
+from . import schemas, services
 
 
 router = APIRouter()

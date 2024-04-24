@@ -3,7 +3,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import api_router
+from app.apis import api_router
 from app.models import engine, Base
 from app.config import settings
 
