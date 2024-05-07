@@ -55,6 +55,7 @@ class AppConfigSettings(BaseSettings):
         return f"https://{self.DOMAIN}"
 
     API_PREFIX: str = "/api"
+    SALT: str = "Salt"
     SECRET: str = secrets.token_urlsafe(32)
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
 
