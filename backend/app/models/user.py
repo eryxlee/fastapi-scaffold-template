@@ -12,6 +12,8 @@ from sqlalchemy.orm import (
     relationship
 )
 
+from app.utils.security import get_md5_hash
+
 from . import Base, CommonMixin, idPk
 
 
@@ -31,9 +33,13 @@ class User(Base, CommonMixin):
     # 用户与TODO的关联关系可以在这里定义
     # todos = relationship("Todo", back_populates="owner")
 
-    # def verify_password(self, raw_password):
-    #     # 使用passlib验证密码
-    #     return verify_password(raw_password, self.hashed_password)
+    def verify_password(self, raw_password, salt) -> bool:
+        # 使用passlib验证密码
+        password = get_md5_hash(raw_password, salt)
+        return bool(password == self.password)
+
+    def set_encrypt_password(self, raw_password, salt) -> None:
+        self.password = get_md5_hash(raw_password, salt)
 
 
 class Role(Base, CommonMixin):
