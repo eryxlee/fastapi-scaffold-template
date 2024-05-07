@@ -45,7 +45,7 @@ class Role(Base, CommonMixin):
     description: Mapped[str | None] = mapped_column(String(60), comment="角色描述")
 
     user_role = relationship("UserRole", back_populates="role")
-#     role_resource = relationship("RoleResource", back_populates="role")
+    role_resource = relationship("RoleResource", back_populates="role")
 
 
 class UserRole(Base):
