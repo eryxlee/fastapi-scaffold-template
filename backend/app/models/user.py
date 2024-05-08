@@ -11,6 +11,7 @@ from sqlalchemy.orm import (
     mapped_column,
     relationship
 )
+from passlib.hash import pbkdf2_sha256
 
 from app.utils.security import get_md5_hash
 
@@ -21,7 +22,7 @@ class User(Base, CommonMixin):
 
     id: Mapped[idPk]
     name: Mapped[str] = mapped_column(String(60), unique=True, comment="用户名")
-    password: Mapped[str] = mapped_column(String(64), comment="密码")
+    password: Mapped[str] = mapped_column(String(128), comment="密码")
     avatar: Mapped[str | None] = mapped_column(String(127), comment="头像")
     email: Mapped[str | None] = mapped_column(String(60), comment="邮件地址")
     gender: Mapped[int | None] = mapped_column(SmallInteger, server_default=text('0'), comment="性别: 0 未知 1 男 2 女")
@@ -33,13 +34,12 @@ class User(Base, CommonMixin):
     # 用户与TODO的关联关系可以在这里定义
     # todos = relationship("Todo", back_populates="owner")
 
-    def verify_password(self, raw_password, salt) -> bool:
+    def verify_password(self, raw_password) -> bool:
         # 使用passlib验证密码
-        password = get_md5_hash(raw_password, salt)
-        return bool(password == self.password)
+        return pbkdf2_sha256.verify(raw_password, self.password)
 
-    def set_encrypt_password(self, raw_password, salt) -> None:
-        self.password = get_md5_hash(raw_password, salt)
+    def set_encrypt_password(self, raw_password) -> None:
+        self.password = pbkdf2_sha256.hash(raw_password)
 
 
 class Role(Base, CommonMixin):

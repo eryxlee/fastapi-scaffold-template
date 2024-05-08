@@ -1,44 +1,57 @@
 # -*- coding: utf-8 -*-
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from app.models import get_db
-# from app.dependencies.auth import authenticate_user, get_current_active_user, oauth2_scheme
-# from app.hashing import get_password_hash
+from starlette.responses import Response
+from fastapi import APIRouter, Depends, HTTPException, status
 
-from . import schemas
-from app.models.user import User
+from app.config import settings
+from app.models import get_db, user
+from app.apis.user import schemas
+from app.extensions.fastapi.pagination import PageQuery
+
+from . import services as user_service
+
 
 router = APIRouter()
 
-@router.post("/register/", response_model=schemas.User)
-async def register(user_data: schemas.UserCreate, db: Session = Depends(get_db)):
-    # 验证用户是否已存在
-    existing_user = db.query(User).filter(User.name == user_data.name).first()
+@router.post("/signup")
+async def user_signup(user_data: schemas.UserCreate,
+    response: Response,
+    db: Session = Depends(get_db),
+) -> schemas.UserOut:
+    """ 注册新用户"""
+    existing_user = user_service.get_user_by_name(db, user_data.name)  # 获取用户信息
     if existing_user:
+        print(existing_user.name)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User Name already registered")
 
-    # 创建新用户
-    # hashed_password = get_password_hash(user_data.password)
-    user = User(name=user_data.name,
-                email=user_data.email,
-                avatar=user_data.avatar,
-                gender=user_data.gender,
-                phone=user_data.phone,
-                password=user_data.password,
-                is_active=1)
-    user.save(db)
+    user_obj = user_service.create_user(db, user_data)
+    return schemas.UserOut.model_validate(user_obj)
 
-    return user
 
-# @router.post("/login/", response_model=dict)
-# async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-#     user = await authenticate_user(form_data)
-#     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-#     access_token = create_access_token(
-#         data={"sub": user.id}, expires_delta=access_token_expires
-#     )
-#     return {"access_token": access_token, "token_type": "bearer"}
+@router.post("/login")
+async def user_login(user_data: schemas.UserLogin,
+    response: Response,
+    db: Session = Depends(get_db),
+) -> schemas.UserOut:
+    try:
+        existing_user = user_service.get_user_by_name(db, user_data.name)
+        if existing_user:
+            assert existing_user.verify_password(user_data.password)
+        else:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="用户不存在")
+    except AssertionError:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="用户名或密码错误")
 
-# 其他用户相关的路由可以在这里继续定义，比如获取用户信息、更新用户信息等
+    return schemas.UserOut.model_validate(existing_user)
+
+
+@router.get("/list")
+def users(db: Session = Depends(get_db), page: PageQuery = None, name: str | None = None):
+    """ 获取用户列表 """
+    a = page.page
+    return None
+
+
+
+
