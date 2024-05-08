@@ -13,8 +13,6 @@ from sqlalchemy.orm import (
 )
 from passlib.hash import pbkdf2_sha256
 
-from app.utils.security import get_md5_hash
-
 from . import Base, CommonMixin, idPk
 
 
