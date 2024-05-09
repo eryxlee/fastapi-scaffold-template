@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
-import secrets
 
 from typing import Annotated, Any, Literal, Optional
-from pydantic import Field, RedisDsn
 from pydantic import (
     AnyUrl,
-    BeforeValidator,
-    HttpUrl,
+    AnyHttpUrl,
     PostgresDsn,
     MySQLDsn,
     MariaDBDsn,
+    RedisDsn,
+    BeforeValidator,
     computed_field,
     model_validator,
 )
@@ -35,40 +34,46 @@ class AppConfigSettings(BaseSettings):
     """
     APP_ENV: Literal["dev", "test", "prod"] = "dev"
 
+    # 应用配置信息
     APP_NAME: str = "My FastAPI App"
-    APP_VERSION: str
-    APP_DESCRIPTION: str
-    APP_DEBUG: bool = False
+    APP_VERSION: str = "0.0.1"
+    APP_DESCRIPTION: Optional[str] = None
+    DEBUG: bool = False
+    BASE_URL: AnyHttpUrl = "http://127.0.0.1:8080"
+    API_PREFIX: str = "/api"
 
+    # 服务器配置信息
     HOST: str = "0.0.0.0"
     PORT: int = 8080
-    DOMAIN: str = "localhost"
     OPENAPI_URL: Optional[str] = None,  # 属性值设置为 None 时，表示不开启
     DOCS_URL: Optional[str] = None,  # 属性值设置为 None 时，表示不开启
     REDOC_URL: Optional[str] = None  # 属性值设置为 None 时，表示不开启
-
-    @computed_field
-    @property
-    def server_host(self) -> str:
-        if self.APP_ENV == "dev":
-            return f"http://{self.DOMAIN}"
-        return f"https://{self.DOMAIN}"
-
-    API_PREFIX: str = "/api"
-    SALT: str = "Salt"
-    SECRET: str = secrets.token_urlsafe(32)
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
-
     CORS_ORIGINS: Annotated[
         list[AnyUrl] | str, BeforeValidator(parse_cors)
     ] = []
 
+    # cookie 配置信息
+    COOKIE_KEY: str = "sessionId"  # key name
+    COOKIE_MAX_AGE: int = 24 * 60 * 60  # 有效时间
+    COOKIE_NOT_CHECK: list[str] = ["/api/user/login", "/api/user/signup"]  # 不校验 Cookie
+
+    # JWT 配置信息
+    JWT_SECRET_KEY: str = "75e39662418f7f77877ccacad6486680a1351d1e81cc1876ff9f5493cb8fb7a6"
+    JWT_ALGORITHM: str = "HS256"
+    JWT_EXPIRED: int = 60
+    JWT_ISS: str = ""
+    JWT_NO_CHECK_URIS: list[str] = ["/","/apidoc","/openapi.json","/api/user/login","/favicon.ico"]
+
     # 数据库配置
-    DB_HOST: str
-    DB_PORT: int
-    DB_USER: str
-    DB_PASSWORD: str
-    DB_DATABASE: str
+    DB_HOST: str = "127.0.0.1"
+    DB_PORT: int = 3306
+    DB_USER: str = "root"
+    DB_PASSWORD: str = ""
+    DB_DATABASE: str = "test"
+    DB_QUERY_STR: str = "charset=utf8mb4"
+    DB_POOL_SIZE: int = 10
+    DB_POOL_OVERFLOW: int = 40
+    DB_ENABLE_ECHO: bool = True
 
     @computed_field
     @property
@@ -80,6 +85,7 @@ class AppConfigSettings(BaseSettings):
             host=self.DB_HOST,
             port=self.DB_PORT,
             path=self.DB_DATABASE,
+            query=self.DB_QUERY_STR
         )
 
     @computed_field
@@ -92,11 +98,21 @@ class AppConfigSettings(BaseSettings):
             host=self.DB_HOST,
             port=self.DB_PORT,
             path=self.DB_DATABASE,
+            query=self.DB_QUERY_STR
         )
 
     # redis配置
-    REDIS_DSN: RedisDsn = None
+    REDIS_DSN: RedisDsn = 'redis://127.0.0.1:6379/0'
+    # redis settings without username -> redis://:123456@localhost:6379/0
+    # aioredis settings -> aioredis://[[username]:[password]]@localhost:6379/0
+    REDIS_EXPIRE: int = 24 * 60 * 60  # Redis 过期时长
+    REDIS_PREFIX: str = "redis-om"  # Redis 全局前缀
 
+    # celery
+    CELERY_BROKER: str = 'redis://127.0.0.1:6379/8'
+    CELERY_BACKEND: str = 'redis://127.0.0.1:6379/8'
+
+    # email
     SMTP_TLS: bool = True
     SMTP_SSL: bool = False
     SMTP_PORT: int = 587
@@ -114,7 +130,7 @@ class AppConfigSettings(BaseSettings):
 
     @computed_field
     @property
-    def emails_enabled(self) -> bool:
+    def EMAILS_ENABLED(self) -> bool:
         return bool(self.SMTP_HOST and self.EMAILS_FROM_EMAIL)
 
     # 内部类，定义环境变量文件读取方式
