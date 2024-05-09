@@ -36,3 +36,6 @@ class UserLogin(BaseModel):
     """ 用户登录时的数据模型 """
     name: str = Field(example='用户名')
     password: str = Field(example='密码')
+
+class TokenModel(UserBase):
+    token: str = None
