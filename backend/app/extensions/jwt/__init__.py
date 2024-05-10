@@ -4,12 +4,15 @@ from jose import  jwt
 from typing import Optional
 from datetime import datetime, timedelta, UTC
 from pydantic import ValidationError
-from fastapi import HTTPException, Header, Depends
+from fastapi import HTTPException, Header, Depends, status
+from fastapi.security import OAuth2PasswordBearer
 
 from sqlalchemy.orm import Session
 from app.models import get_db
 
 from app.config import settings
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/user/login")
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     """
@@ -29,7 +32,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     return encoded_jwt
 
 
-def check_jwt_token(token: Optional[str] = Header(""), db: Session = Depends(get_db)):
+def check_jwt_token(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     """
     验证token
     :param token:

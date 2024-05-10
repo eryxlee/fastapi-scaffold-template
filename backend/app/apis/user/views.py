@@ -4,6 +4,7 @@ from datetime import timedelta
 from sqlalchemy.orm import Session
 from starlette.responses import Response
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
 
 from app.config import settings
 from app.models import get_db, user
@@ -33,14 +34,13 @@ async def user_signup(user_data: schemas.UserCreate,
 
 
 @router.post("/login")
-async def user_login(user_data: schemas.UserLogin,
-    response: Response,
+async def user_login(form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),
-) -> schemas.TokenModel:
+):
     try:
-        existing_user = user_service.get_user_by_name(db, user_data.name)
+        existing_user = user_service.get_user_by_name(db, form_data.username)
         if existing_user:
-            assert existing_user.verify_password(user_data.password)
+            assert existing_user.verify_password(form_data.password)
         else:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="用户不存在")
     except AssertionError:
@@ -56,7 +56,7 @@ async def user_login(user_data: schemas.UserLogin,
     token_out = schemas.TokenModel.model_validate(existing_user, from_attributes=True)
     token_out.token = access_token
 
-    return token_out
+    return {"access_token": access_token, "token_type": "bearer"}
 
 
 
