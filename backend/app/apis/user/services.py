@@ -1,26 +1,32 @@
 # -*- coding: utf-8 -*-
 
-from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlmodel import Session, select
+from fastapi import Depends
 
-from app.models import user as user_model
+from app.models import get_db
+from app.commons.enums import *
+from app.models.user import *
 
-from . import schemas
 
+class UserService:
+    def __init__(self, session: Session = Depends(get_db)):
+        self.session = session
 
-def get_user_by_id(db: Session, user_id: int):
-    user = db.query(user_model.User).filter(user_model.User.id == user_id).first()
-    return user
+    def get_user_by_id(self, user_id: int = None) -> User | None:
+        statement = select(User).where(User.id == user_id)
+        results = self.session.exec(statement=statement)
+        return results.one_or_none()
 
-def get_user_by_name(db: Session, username: str) -> user_model.User:
-    user = db.query(user_model.User).filter(user_model.User.name == username).first()
-    return user
+    def get_user_by_name(self, username: str = None)-> User | None:
+        statement = select(User).where(User.name == username)
+        results = self.session.exec(statement=statement)
+        return results.one_or_none()
 
-def create_user(db: Session, user_create: schemas.UserCreate):
-    user = user_model.User(**user_create.model_dump())
-    user.set_encrypt_password(user_create.password)
-    user.is_active = 0
-    user.is_deleted = 0
+    def create_user(self, user_create: UserCreate) -> User:
+        user = User(**user_create.model_dump())
+        user.password = User.encrypt_password(user_create.password)
+        user.is_active = UserAvailableStatus.NOT_SET
+        user.is_deleted = DeleteStatus.NOT_SET
 
-    user.save(db)
-    return user
+        user.save(self.session)
+        return user

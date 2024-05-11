@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.apis import api_router
-from app.models import engine, Base
+from app.models import engine
 from app.config import settings
 
 from app.extensions.fastapi.middleware import TimingMiddleware, MetaDataAdderMiddleware
@@ -40,7 +40,9 @@ GlobalExceptionHandler(app).init()
 @app.on_event("startup")
 async def startup_event():
     # 创建数据库表（如果尚未创建）
-    Base.metadata.create_all(bind=engine)
+    from app.models import init_db
+    init_db()
+    # Base.metadata.create_all(bind=engine)
     # 你可以在这里执行其他需要在应用启动时执行的代码
 
 # # 应用关闭事件监听器
