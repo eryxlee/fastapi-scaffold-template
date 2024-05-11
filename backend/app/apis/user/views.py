@@ -13,6 +13,7 @@ from app.extensions.fastapi.pagination import PageQuery
 from app.extensions.jwt import create_access_token, check_jwt_token
 
 from . import services as user_service
+from .exception import *
 
 
 router = APIRouter()
@@ -26,8 +27,7 @@ async def user_signup(user_data: schemas.UserCreate,
     existing_user = user_service.get_user_by_name(db, user_data.name)  # 获取用户信息
     t = settings.MARIADB_DATABASE_URI.unicode_string()
     if existing_user:
-        print(existing_user.name)
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User Name already registered")
+        raise UsernameUsedException()
 
     user_obj = user_service.create_user(db, user_data)
     return schemas.UserOut.model_validate(user_obj)
@@ -42,9 +42,9 @@ async def user_login(form_data: OAuth2PasswordRequestForm = Depends(),
         if existing_user:
             assert existing_user.verify_password(form_data.password)
         else:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="用户不存在")
+            raise UserNotFoundException()
     except AssertionError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="用户名或密码错误")
+        raise UserOrPasswordException()
 
     # 过期时间
     access_token_expires = timedelta(minutes=settings.JWT_EXPIRED)
