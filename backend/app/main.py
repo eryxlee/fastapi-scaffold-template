@@ -41,8 +41,7 @@ GlobalExceptionHandler(app).init()
 async def startup_event():
     # 创建数据库表（如果尚未创建）
     from app.models import init_db
-    init_db()
-    # Base.metadata.create_all(bind=engine)
+    await init_db()
     # 你可以在这里执行其他需要在应用启动时执行的代码
 
 # # 应用关闭事件监听器

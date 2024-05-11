@@ -21,11 +21,11 @@ async def user_signup(
     user_service: UserService = Depends(UserService),
 ) -> User:
     """ 注册新用户"""
-    existing_user = user_service.get_user_by_name(user_data.name)  # 获取用户信息
+    existing_user = await user_service.get_user_by_name(user_data.name)  # 获取用户信息
     if existing_user:
         raise UsernameUsedException()
 
-    user_obj = user_service.create_user(user_data)
+    user_obj = await user_service.create_user(user_data)
     return user_obj
 
 
@@ -34,7 +34,7 @@ async def user_login(form_data: OAuth2PasswordRequestForm = Depends(),
     user_service: UserService = Depends(UserService),
 ) -> dict:
     try:
-        existing_user = user_service.get_user_by_name(form_data.username)
+        existing_user = await user_service.get_user_by_name(form_data.username)
         if existing_user:
             assert existing_user.verify_password(form_data.password)
         else:

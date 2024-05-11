@@ -7,9 +7,6 @@ from pydantic import ValidationError
 from fastapi import HTTPException, Header, Depends, status
 from fastapi.security import OAuth2PasswordBearer
 
-from sqlalchemy.orm import Session
-from app.models import get_db
-
 from app.apis.user.services import UserService
 from app.config import settings
 
@@ -33,7 +30,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     return encoded_jwt
 
 
-def check_jwt_token(
+async def check_jwt_token(
         token: str = Depends(oauth2_scheme),
         user_service: UserService = Depends(UserService),
 ):
@@ -46,7 +43,7 @@ def check_jwt_token(
         payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=settings.JWT_ALGORITHM)
         username: str = payload.get("sub")
         # 通过解析得到的username,获取用户信息,并返回
-        return user_service.get_user_by_name(username)
+        return await user_service.get_user_by_name(username)
     except (jwt.JWTError, jwt.ExpiredSignatureError, ValidationError):
         raise HTTPException(
             status_code=401,#status.HTTP_401_UNAUTHORIZED,

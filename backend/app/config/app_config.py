@@ -101,6 +101,19 @@ class AppConfigSettings(BaseSettings):
             query=self.DB_QUERY_STR
         )
 
+    @computed_field
+    @property
+    def AIO_MARIADB_DATABASE_URI(self) -> MariaDBDsn:
+        return MultiHostUrl.build(
+            scheme="mysql+aiomysql",
+            username=self.DB_USER,
+            password=self.DB_PASSWORD,
+            host=self.DB_HOST,
+            port=self.DB_PORT,
+            path=self.DB_DATABASE,
+            query=self.DB_QUERY_STR
+        )
+
     # redis配置
     REDIS_DSN: RedisDsn = 'redis://127.0.0.1:6379/0'
     # redis settings without username -> redis://:123456@localhost:6379/0

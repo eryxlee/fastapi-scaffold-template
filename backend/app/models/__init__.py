@@ -9,39 +9,42 @@ from typing import Any, Type
 from datetime import datetime, UTC
 from functools import partial
 
-from collections.abc import Generator
+from collections.abc import AsyncGenerator
 from pydantic_core import PydanticUndefined
 
 from sqlalchemy import text, String
-from sqlalchemy.pool import QueuePool
-from sqlalchemy.orm import declared_attr
+from sqlalchemy.orm import declared_attr, sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine
 
-from sqlmodel import create_engine
 from sqlmodel.main import SQLModelMetaclass
 from sqlmodel import Session, Field, SQLModel
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.config import settings
 
-
 # 采用配置变量创建数据库引擎
-engine = create_engine(
-    settings.MARIADB_DATABASE_URI.unicode_string(),
+engine = create_async_engine(
+    settings.AIO_MARIADB_DATABASE_URI.unicode_string(),
     echo=settings.DB_ENABLE_ECHO,
     pool_size=settings.DB_POOL_SIZE,
     max_overflow=settings.DB_POOL_OVERFLOW,
-    poolclass=QueuePool
+    future=True
 )
 
-
-def get_db() -> Generator[Session, None, None]:
-    """ 获取数据库访问 Session"""
-    with Session(engine, autocommit=False, autoflush=False) as session:
+async def get_session() -> AsyncGenerator[AsyncSession, None, None]:
+    async_session = sessionmaker(
+        engine, class_=AsyncSession, expire_on_commit=False
+    )
+    async with async_session() as session:
         yield session
 
 
-def init_db() -> None:
-    """ 初始化数据库 """
-    SQLModel.metadata.create_all(engine)
+# metadata.create_all doesn't execute asynchronously, so we used run_sync
+# to execute it synchronously within the async function.
+async def init_db() -> None:
+    async with engine.begin() as conn:
+        # await conn.run_sync(SQLModel.metadata.drop_all)
+        await conn.run_sync(SQLModel.metadata.create_all)
 
 
 class UUIDModel(SQLModel):
@@ -149,41 +152,41 @@ class TableBase(SQLModel, metaclass=DescriptionMeta):
         snake_case = re.sub(r"(?P<key>[A-Z])", r"_\g<key>", cls.__name__)
         return snake_case.lower().strip('_')
 
-    def save(self, db:Session):
+    async def save(self, db:Session):
         db.add(self)
-        self.commit_or_rollback(db)
-        db.refresh(self)
+        await self.commit_or_rollback(db)
+        await db.refresh(self)
         return self
 
-    def delete(self, db:Session, commit:bool=True):
-        db.session.delete(self)
+    async def delete(self, db:Session, commit:bool=True):
+        await db.session.delete(self)
         if commit:
-            self.commit_or_rollback(db)
+            await self.commit_or_rollback(db)
 
-    def update(self, db:Session, **kwargs):
+    async def update(self, db:Session, **kwargs):
         required_commit = False
         for k, v in kwargs.items():
             if hasattr(self, k) and getattr(self, k) != v:
                 required_commit = True
                 setattr(self, k, v)
         if required_commit:
-            self.commit_or_rollback(db)
+            await self.commit_or_rollback(db)
         return required_commit
 
     @classmethod
-    def add_or_update(self, db:Session, where, **kwargs):
+    async def add_or_update(self, db:Session, where, **kwargs):
         record = self.query.filter_by(**where).first()
         if record:
-            record.update(db, **kwargs)
+            await record.update(db, **kwargs)
         else:
-            record = self(**kwargs).save(db)
+            record = await self(**kwargs).save(db)
         return record
 
-    def commit_or_rollback(self, db):
+    async def commit_or_rollback(self, db):
         try:
-            db.commit()
+            await db.commit()
         except Exception:
-            db.rollback()
+            await db.rollback()
             raise
 
 
