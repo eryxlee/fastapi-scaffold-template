@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 
 from app.config import settings
+from app.extensions.fastapi.api import ApiResponse
 from app.models import get_db, user
 from app.apis.user import schemas
 from app.extensions.fastapi.pagination import PageQuery
@@ -56,8 +57,10 @@ async def user_login(form_data: OAuth2PasswordRequestForm = Depends(),
     token_out = schemas.TokenModel.model_validate(existing_user, from_attributes=True)
     token_out.token = access_token
 
-    return {"access_token": access_token, "token_type": "bearer"}
-
+    # 返回一个定制的响应体以适配JWT需求
+    return {"status": True, "code": 200, "message":"",
+            "access_token": access_token, "token_type": "bearer"
+        }
 
 
 @router.get("/me")
