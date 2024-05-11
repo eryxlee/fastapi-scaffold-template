@@ -2,12 +2,25 @@
 
 import logging
 
-from fastapi import FastAPI, Request
+from starlette.exceptions import HTTPException
+from fastapi import FastAPI, Request, status
+from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 
 from app.extensions.fastapi.api import ApiResponse
 
 logger = logging.getLogger(__name__)
+
+
+error_message = {
+    400: "请求参数有误",
+    401: "未经授权的请求",
+    403: "服务端拒绝提供服务",
+    404: "访问地址不存在",
+    405: "请求方法不能被用于请求相应的资源",
+    500: "服务器发生未知错误",
+    10000: "数据校验错误"
+}
 
 
 class APIException(Exception):
@@ -28,48 +41,52 @@ class APIException(Exception):
         )
 
 
-bad_request_exception_respone = ApiResponse(status=False, code=10001, message="错误的请求", status_code=400)
-unauthorized_exception_respone = ApiResponse(status=False, code=10002, message="未经授权的请求", status_code=401)
-forbidden_exception_respone = ApiResponse(status=False, code=10003, message="无权访问或数据未授权", status_code=403)
-notfound_exception_respone = ApiResponse(status=False, code=10004, message="访问地址不存在", status_code=404)
-method_notallowed_exception_respone = ApiResponse(status=False, code=10005, message="不允许使用此方法提交访问", status_code=405)
-rate_limit_exception_respone = ApiResponse(status=False, code=10006, message="访问的速度过快", status_code=429)
-unknown_error_exception_respone = ApiResponse(status=False, code=10088, message="服务器发生未知错误")
-
-
 class GlobalExceptionHandler:
 
     def __init__(self, app: FastAPI):
         self.app = app
 
     @staticmethod
-    async def handle_request_validation_error(
-        request: Request, validation_error: RequestValidationError):
-        errors = list()
-
-        for error in validation_error.raw_errors:
-            for raw_error in error.exc.raw_errors:
-                field_error = {
-                    'type': 'validation_error',
-                    'error': raw_error._loc,
-                    'message': str(raw_error.exc)
-                }
-                errors.append(field_error)
-
-        return ApiResponse(status=False, code=10009, message="数据校验错误", content=errors)
+    async def handle_request_validation_error(request: Request, exc: RequestValidationError):
+        return ApiResponse(
+            status=False,
+            code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            message=jsonable_encoder({"detail": exc.errors(), "body": exc.body}),
+        )
 
     @staticmethod
     async def handle_api_exception(request: Request, error: APIException):
         return ApiResponse(status=False, code=error.code, message=error.message)
 
     @staticmethod
+    async def handle_http_exception(request: Request, error: HTTPException):
+        # 将出错信息转换成中文
+        message = error_message[error.status_code] \
+            if error_message.get(error.status_code) else error.detail
+
+        return ApiResponse(
+            status=False,
+            code=error.status_code,
+            message=message,
+            status_code=error.status_code # 保留status_code，该值不会出现在输出内容中
+        )
+
+    @staticmethod
     async def handle_exception(request: Request, error: Exception):
-        logger.error(f'{request.url} {error}')
-        return unknown_error_exception_respone
+        return ApiResponse(
+            status=False,
+            code=500, # 未知错误都归结于500
+            message=(
+                f"在链接 {request.url} 处使用 {request.method} 出错."
+                f" 出错信息为 {error!r}."
+            ),
+            status_code=500
+        )
 
     def init(self):
         self.app.add_exception_handler(
             RequestValidationError, self.handle_request_validation_error
         )
         self.app.add_exception_handler(APIException, self.handle_api_exception)
+        self.app.add_exception_handler(HTTPException, self.handle_http_exception)
         self.app.add_exception_handler(Exception, self.handle_exception)
