@@ -5,9 +5,9 @@ import re
 import uuid
 
 from ast import Dict, Tuple
-from typing import Any, Type
-from datetime import datetime, UTC
+from typing import Any, Type, TypeVar
 from functools import partial
+from datetime import datetime, UTC
 
 from collections.abc import AsyncGenerator
 from pydantic_core import PydanticUndefined
@@ -16,9 +16,9 @@ from sqlalchemy import text, String
 from sqlalchemy.orm import declared_attr, sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine
 
+from sqlmodel import SQLModel, Field, select, delete
 from sqlmodel.main import SQLModelMetaclass
-from sqlmodel import Session, Field, SQLModel
-from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlmodel.ext.asyncio.session import AsyncSession as Session
 
 from app.config import settings
 
@@ -31,9 +31,9 @@ engine = create_async_engine(
     future=True
 )
 
-async def get_session() -> AsyncGenerator[AsyncSession, None, None]:
+async def get_session() -> AsyncGenerator[Session, None, None]:
     async_session = sessionmaker(
-        engine, class_=AsyncSession, expire_on_commit=False
+        engine, class_=Session, expire_on_commit=False
     )
     async with async_session() as session:
         yield session
@@ -137,6 +137,9 @@ class DescriptionMeta(SQLModelMetaclass):
         return new_class
 
 
+T = TypeVar('T')
+
+
 class TableBase(SQLModel, metaclass=DescriptionMeta):
     """ 数据库表公共属性模型定义 """
     __table_args__ = {
@@ -152,41 +155,54 @@ class TableBase(SQLModel, metaclass=DescriptionMeta):
         snake_case = re.sub(r"(?P<key>[A-Z])", r"_\g<key>", cls.__name__)
         return snake_case.lower().strip('_')
 
-    async def save(self, db:Session):
-        db.add(self)
-        await self.commit_or_rollback(db)
-        await db.refresh(self)
+    @classmethod
+    async def get(cls, session:Session, id: int = None) -> T | None:
+        statement = select(T).where(T.id == id)
+        results = await session.exec(statement=statement)
+        return results.one_or_none()
+
+    async def save(self, session:Session):
+        session.add(self)
+        await self.commit_or_rollback(session)
+        await session.refresh(self)
         return self
 
-    async def delete(self, db:Session, commit:bool=True):
-        await db.session.delete(self)
+    async def delete(self, session:Session, commit:bool=True):
+        await session.delete(self)
         if commit:
-            await self.commit_or_rollback(db)
+            await self.commit_or_rollback(session)
 
-    async def update(self, db:Session, **kwargs):
+    @classmethod
+    async def delete_without_select(cls, session:Session, T, id: int):
+        statement = delete(T).where(T.id == id)
+
+        await session.exec(statement=statement)
+        await session.commit()
+
+    async def update(self, session:Session, **kwargs):
         required_commit = False
         for k, v in kwargs.items():
             if hasattr(self, k) and getattr(self, k) != v:
                 required_commit = True
                 setattr(self, k, v)
         if required_commit:
-            await self.commit_or_rollback(db)
+            await self.commit_or_rollback(session)
         return required_commit
 
     @classmethod
-    async def add_or_update(self, db:Session, where, **kwargs):
-        record = self.query.filter_by(**where).first()
+    async def add_or_update(self, session:Session, where, **kwargs):
+        record = session.query.filter_by(**where).first()
         if record:
-            await record.update(db, **kwargs)
+            await record.update(session, **kwargs)
         else:
-            record = await self(**kwargs).save(db)
+            record = await self(**kwargs).save(session)
         return record
 
-    async def commit_or_rollback(self, db):
+    async def commit_or_rollback(self, session):
         try:
-            await db.commit()
+            await session.commit()
         except Exception:
-            await db.rollback()
+            await session.rollback()
             raise
 
 

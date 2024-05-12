@@ -1,29 +1,21 @@
 # -*- coding: utf-8 -*-
 
-from sqlmodel import Session, select
 from fastapi import Depends
-from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlmodel import select
 
-from app.models import get_session
+from app.models import get_session, Session
 from app.commons.enums import *
 from app.models.user import *
 
 
 class UserService:
-    def __init__(self, session: AsyncSession = Depends(get_session)):
+    def __init__(self, session: Session = Depends(get_session)):
         self.session = session
 
-    async def get_user_by_id(self, user_id: int = None) -> User | None:
-        statement = select(User).where(User.id == user_id)
-        results = await self.session.exec(statement=statement)
-        return results.one_or_none()
+    async def get(self, id: int = None) -> User | None:
+        return User.get(self.session, id)
 
-    async def get_user_by_name(self, username: str = None)-> User | None:
-        statement = select(User).where(User.name == username)
-        results = await self.session.exec(statement=statement)
-        return results.one_or_none()
-
-    async def create_user(self, user_create: UserCreate) -> User:
+    async def create(self, user_create: UserCreate) -> User:
         user = User(**user_create.model_dump())
         user.password = User.encrypt_password(user_create.password)
         user.is_active = UserAvailableStatus.NOT_SET
@@ -31,3 +23,19 @@ class UserService:
 
         await user.save(self.session)
         return user
+
+    async def patch(self, id: int, data: UserUpdate) -> User:
+        user = await self.get(id=id)
+        values = data.model_dump(exclude_unset=True)
+
+        user.update(self.session, **values)
+        return user
+
+    async def delete(self, id: int) -> bool:
+        await User.delete_without_select(self.session, User, id)
+        return True
+
+    async def get_user_by_name(self, username: str = None)-> User | None:
+        statement = select(User).where(User.name == username)
+        results = await self.session.exec(statement=statement)
+        return results.one_or_none()

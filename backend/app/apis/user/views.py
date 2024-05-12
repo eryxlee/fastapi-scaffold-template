@@ -25,7 +25,7 @@ async def user_signup(
     if existing_user:
         raise UsernameUsedException()
 
-    user_obj = await user_service.create_user(user_data)
+    user_obj = await user_service.create(user_data)
     return user_obj
 
 
@@ -56,13 +56,13 @@ async def user_login(form_data: OAuth2PasswordRequestForm = Depends(),
 
 
 @router.get("/me", response_model=User, response_model_exclude=("password"))
-def user_me(user: User = Depends(check_jwt_token)):
+async def user_me(user: User = Depends(check_jwt_token)):
     """ 获取用户详情 """
     return user
 
 
 @router.get("/list", dependencies=[Depends(check_jwt_token)])
-def users(
+async def users(
     page: PageQuery = None,
     name: str | None = None,
     user_service: UserService = Depends(UserService)
@@ -70,3 +70,9 @@ def users(
     """ 获取用户列表 """
     a = page.page
     return None
+
+@router.delete("/{user_id}")
+async def user_delete(user_id: int, user_service: UserService = Depends(UserService)):
+    """ 获取用户详情 """
+    await user_service.delete(user_id)
+    return {}
