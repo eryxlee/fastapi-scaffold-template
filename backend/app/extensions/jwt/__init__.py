@@ -10,7 +10,7 @@ from fastapi.security import OAuth2PasswordBearer
 from app.apis.user.services import UserService
 from app.config import settings
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/user/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     """

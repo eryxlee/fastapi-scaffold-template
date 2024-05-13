@@ -3,9 +3,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.apis import api_router
-from app.models import engine
 from app.config import settings
+from app.apis import api_router, base_router
 
 from app.extensions.fastapi.middleware import TimingMiddleware, MetaDataAdderMiddleware
 from app.extensions.fastapi.exception import GlobalExceptionHandler
@@ -51,4 +50,5 @@ async def startup_event():
 #     pass
 
 # 将路由添加到应用中
+app.include_router(base_router)
 app.include_router(api_router, prefix=settings.API_PREFIX)
