@@ -1,30 +1,30 @@
 # -*- coding: utf-8 -*-
 
+from typing import Optional
+from pydantic import EmailStr
+from passlib.hash import pbkdf2_sha256
+
 from sqlalchemy import (
     String,
     SmallInteger,
-    text
 )
+from sqlmodel import SQLModel, Field
 
-from passlib.hash import pbkdf2_sha256
-
-from pydantic import EmailStr
-from sqlmodel import Session, Field, SQLModel
 from . import TimestampModel, IDModel, TableBase, CommonPropertyModel
 
 
 class UserBase(SQLModel):
     """ 用户模型公共部分 """
-    name: str = Field(default="", max_length=60, nullable=False, description="用户名", sa_type=String(60))
-    avatar: str | None = Field(max_length=128, nullable=True, description="头像", sa_type=String(128))
-    email: EmailStr | None = Field(max_length=128, nullable=True, description="邮件", sa_type=String(128))
-    gender: int | None = Field(nullable=True, description="性别", sa_type=SmallInteger)
-    phone: str | None = Field(max_length=36, nullable=True, description="电话", sa_type=String(36))
+    name: str = Field(default=None, max_length=60, nullable=False, description="用户名", sa_type=String(60))
+    avatar: str = Field(default=None, max_length=128, nullable=True, description="头像", sa_type=String(128))
+    email: EmailStr = Field(default=None, max_length=128, nullable=True, description="邮件", sa_type=String(128))
+    gender: int = Field(default=None, nullable=True, description="性别", sa_type=SmallInteger)
+    phone: str = Field(default=None, max_length=36, nullable=True, description="电话", sa_type=String(36))
 
 
 class UserCreate(UserBase):
     """ 注册时采用的用户模型 """
-    password: str = Field(default="", max_length=128, nullable=False, description="密码", sa_type=String(128))
+    password: str = Field(default=None, max_length=128, nullable=False, description="密码", sa_type=String(128))
 
 
 class UserUpdate(UserCreate):

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from typing import Any
 from datetime import timedelta
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
@@ -13,6 +14,51 @@ from .services import UserService
 from .exception import *
 
 router = APIRouter()
+
+
+@router.get(
+    "/",
+    # dependencies=[Depends(check_jwt_token), Depends(get_current_active_superuser)],
+    # response_model=UsersPublic,
+)
+async def read_users(
+        page: PageQuery = None,
+        user_service: UserService = Depends(UserService)
+) -> Any:
+    """
+    Retrieve users.
+    """
+    count = await user_service.get_user_list_count()
+    users = await user_service.get_user_list(page.offset, page.limit)
+    from app.extensions.fastapi.pagination import PageSchemaOut
+    page_out = PageSchemaOut.model_validate(page, update={"total": count})
+
+    return {"data": users, "page": page_out}
+
+
+@router.patch("/me", response_model=User)
+async def update_user_me(
+    *,
+    user_in: UserUpdate,
+    user_service: UserService = Depends(UserService),
+    current_user: User = Depends(check_jwt_token)
+) -> Any:
+    """ Update own user."""
+
+    if user_in.name:
+        existing_user = await user_service.get_user_by_name(user_in.name)
+        if existing_user and existing_user.id != current_user.id:
+            raise UsernameUsedException()
+
+    await user_service.patch_by_obj(current_user, user_in)
+
+    return current_user
+
+
+@router.get("/me", response_model=User, response_model_exclude=("password"))
+async def user_me(current_user: User = Depends(check_jwt_token)):
+    """ 获取用户详情 """
+    return current_user
 
 
 @router.post("/signup")
@@ -29,50 +75,52 @@ async def user_signup(
     return user_obj
 
 
-@router.post("/login")
-async def user_login(form_data: OAuth2PasswordRequestForm = Depends(),
+@router.get("/{user_id}", response_model=User, response_model_exclude=("password"))
+async def read_user_by_id(
+    user_id: int,
     user_service: UserService = Depends(UserService),
-) -> dict:
-    try:
-        existing_user = await user_service.get_user_by_name(form_data.username)
-        if existing_user:
-            assert existing_user.verify_password(form_data.password)
-        else:
-            raise UserNotFoundException()
-    except AssertionError:
-        raise UserOrPasswordException()
+    current_user: User = Depends(check_jwt_token)
+) -> Any:
+    """ 根据id访问用户信息 """
+    user = await user_service.get(user_id)
+    if user == current_user:
+        return user
 
-    # 过期时间
-    access_token_expires = timedelta(minutes=settings.JWT_EXPIRED)
-    # 把id进行username加密，要使用str类型
-    access_token = create_access_token(
-        data={"sub": existing_user.name}, expires_delta=access_token_expires
-    )
+    # TODO 如果不是管理员，无权访问其他用户信息
 
-    # 返回一个定制的响应体以适配JWT需求
-    return {"status": True, "code": 200, "message":"",
-            "access_token": access_token, "token_type": "bearer"
-        }
-
-
-@router.get("/me", response_model=User, response_model_exclude=("password"))
-async def user_me(user: User = Depends(check_jwt_token)):
-    """ 获取用户详情 """
     return user
 
 
-@router.get("/list", dependencies=[Depends(check_jwt_token)])
-async def users(
-    page: PageQuery = None,
-    name: str | None = None,
-    user_service: UserService = Depends(UserService)
-):
-    """ 获取用户列表 """
-    a = page.page
-    return None
+@router.patch("/{user_id}", response_model=User)
+async def update_user(
+    *,
+    user_id: int,
+    user_in: UserUpdate,
+    user_service: UserService = Depends(UserService),
+    current_user: User = Depends(check_jwt_token)
+) -> Any:
+    """ 修改用户信息 """
+
+    db_user = await user_service.get(user_id)
+    if not db_user:
+        raise UserNotFoundException()
+    if user_in.name:
+        existing_user = await user_service.get_user_by_name(user_in.name)
+        if existing_user and existing_user.id != user_id:
+            raise UsernameUsedException()
+
+    db_user = await user_service.patch_by_obj(db_user, user_in)
+    return db_user
+
 
 @router.delete("/{user_id}")
-async def user_delete(user_id: int, user_service: UserService = Depends(UserService)):
-    """ 获取用户详情 """
+async def user_delete(
+    user_id: int,
+    user_service: UserService = Depends(UserService),
+    current_user: User = Depends(check_jwt_token)
+):
+    """ 物理删除用户 """
+    # TODO 权限判断，是否能删除
+
     await user_service.delete(user_id)
     return {}

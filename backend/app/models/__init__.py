@@ -156,7 +156,7 @@ class TableBase(SQLModel, metaclass=DescriptionMeta):
         return snake_case.lower().strip('_')
 
     @classmethod
-    async def get(cls, session:Session, id: int = None) -> T | None:
+    async def get(cls, session:Session, T, id: int = None) -> T | None:
         statement = select(T).where(T.id == id)
         results = await session.exec(statement=statement)
         return results.one_or_none()
