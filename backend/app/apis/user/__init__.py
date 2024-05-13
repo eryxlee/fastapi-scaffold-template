@@ -1,4 +1,4 @@
 
-from .views import *
+from .api import *
 
 __ALL__ = ["router"]
