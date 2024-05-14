@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "fastapi 框架案例"
+version = "0.0.1"
+description = "这是一个使用了FastAPI框架技术的Python应用示例"
+authors = ["Eryx Lee"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.111.0"
+uvicorn = {extras = ["standard"], version = "^0.29.0"}
+pydantic = {extras = ["email"], version = "^2.7.1"}
+pydantic-settings = "^2.2.1"
+aiomysql = "^0.2.0"
+sqlmodel = "^0.0.18"
+passlib = "^1.7.4"
+python-jose = "^3.3.0"
+
+
+[[tool.poetry.source]]
+name = "mirrors"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
+priority = "primary"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
