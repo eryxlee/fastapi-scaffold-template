@@ -2,6 +2,8 @@
 
 import logging
 
+from typing import Any, List, Optional
+
 from starlette.exceptions import HTTPException
 from fastapi import FastAPI, Request, status
 from fastapi.encoders import jsonable_encoder
@@ -20,6 +22,87 @@ error_message = {
     405: "请求方法不能被用于请求相应的资源",
     500: "服务器发生未知错误",
 }
+
+
+def parse_error(err: Any, field_names: List, raw: bool = True) -> Optional[dict]:
+    """
+    Parse single error object (such as pydantic-based or fastapi-based) to dict
+    :param err: Error object
+    :param field_names: List of names of the field that are already processed
+    :param raw: Whether this is a raw error or wrapped pydantic error
+    :return: dict with name of the field (or "__all__") and actual message
+    """
+    # if isinstance(err.exc, EnumError):
+    #     permitted_values = ", ".join([f"'{val}'" for val in err.exc.enum_values])
+    #     message = f"Value is not a valid enumeration member; "f"permitted: {permitted_values}."
+    # elif isinstance(err.exc, StrRegexError):
+    #     message = "Provided value doesn't match valid format."
+    # else:
+    message = err["msg"]
+
+    if not raw:
+        if len(err["loc"]) == 2:
+            if str(err["loc"][0]) in ["body", "query"]:
+                name = err["loc"][1]
+            else:
+                name = err["loc"][0]
+        elif len(err["loc"]) == 1:
+            if str(err["loc"][0]) == "body":
+                name = "__all__"
+            else:
+                name = str(err["loc"][0])
+        else:
+            name = "__all__"
+    else:
+        if len(err["loc"]) == 2:
+            name = str(err["loc"][0])
+        elif len(err["loc"]) == 1:
+            name = str(err["loc"][0])
+        else:
+            name = "__all__"
+
+    if name in field_names:
+        return None
+
+    if message and not any(
+            [message.endswith("."), message.endswith("?"), message.endswith("!")]
+    ):
+        message = message + "."
+    message = message.capitalize()
+
+    return {"name": name, "message": message}
+
+
+def raw_errors_to_fields(raw_errors: List) -> List[dict]:
+    """
+    Translates list of raw errors (instances) into list of dicts with name/msg
+    :param raw_errors: List with instances of raw error
+    :return: List of dicts (1 dict for every raw error)
+    """
+    fields = []
+    for top_err in raw_errors:
+        # if hasattr(top_err.exc, "raw_errors"):
+        #     for err in top_err.exc.raw_errors:
+        #         # This is a special case when errors happen both in request
+        #         # handling & internal validation
+        #         if isinstance(err, list):
+        #             err = err[0]
+        #         field_err = parse_error(
+        #             err,
+        #             field_names=list(map(lambda x: x["name"], fields)),
+        #             raw=True,
+        #         )
+        #         if field_err is not None:
+        #             fields.append(field_err)
+        # else:
+            field_err = parse_error(
+                top_err,
+                field_names=list(map(lambda x: x["name"], fields)),
+                raw=False,
+            )
+            if field_err is not None:
+                fields.append(field_err)
+    return fields
 
 
 class APIException(Exception):
@@ -47,10 +130,14 @@ class GlobalExceptionHandler:
 
     @staticmethod
     async def handle_request_validation_error(request: Request, exc: RequestValidationError):
+        fields = raw_errors_to_fields(exc.errors())
+
         return ApiResponse(
             status=False,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            message=jsonable_encoder({"detail": exc.errors(), "body": exc.body}),
+            message="数据校验错误",
+            content=fields    # jsonable_encoder({"detail": exc.errors(), "body": exc.body})
         )
 
     @staticmethod
