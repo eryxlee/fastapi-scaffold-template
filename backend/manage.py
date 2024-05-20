@@ -40,11 +40,22 @@ def start(env_file, log_config):
 
     uvicorn.run(
         app,
-        host=settings.APP_HOST,
-        port=settings.APP_PORT,
+        host=settings.HOST,
+        port=settings.PORT,
         log_config=log_config
     )
 
+@cli.command('init-data')
+@click.option('--env-file', default=".env", help='Project settings file.')
+def init_data(env_file):
+    load_dotenv(env_file)
+
+    import asyncio
+    from app.models.init_data import init_data
+
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(init_data())
 
 if __name__ == '__main__':
     cli()
