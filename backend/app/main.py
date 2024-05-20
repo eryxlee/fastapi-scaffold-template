@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
@@ -34,6 +35,9 @@ app.add_middleware(
 )
 # 统一异常输出结构
 GlobalExceptionHandler(app).init()
+
+# 设置静态文件目录
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # 应用启动事件监听器
 @app.on_event("startup")

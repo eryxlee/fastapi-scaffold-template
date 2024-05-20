@@ -22,7 +22,11 @@ class TimingMiddleware(BaseHTTPMiddleware):
 
 # https://github.com/tiangolo/fastapi/issues/4766
 class MetaDataAdderMiddleware:
-    application_generic_urls = ['/openapi.json', '/docs', '/docs/oauth2-redirect', '/redoc']
+    application_generic_urls = ['/openapi.json',
+                                '/docs', '/docs/oauth2-redirect',
+                                '/redoc',
+                                '/ws',
+                                '/static']
 
     def __init__(
             self,
