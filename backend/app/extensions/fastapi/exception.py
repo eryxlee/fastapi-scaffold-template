@@ -108,18 +108,21 @@ def raw_errors_to_fields(raw_errors: List) -> List[dict]:
 class APIException(Exception):
     """api 通用异常
     """
+    status_code = 200
     code = 10000
     message = 'A server error occurred.'
 
-    def __init__(self, code=None, message=None):
+    def __init__(self, status_code=None, code=None, message=None):
+        if status_code is not None:
+            self.status_code = status_code
         if code is not None:
             self.code = code
         if message is not None:
             self.message = message
 
     def __repr__(self):
-        return '<{} {}: {}>'.format(
-            self.__class__, self.code, self.message
+        return '<{} {} {}: {}>'.format(
+            self.__class__, self.status_code, self.code, self.message
         )
 
 
@@ -142,7 +145,10 @@ class GlobalExceptionHandler:
 
     @staticmethod
     async def handle_api_exception(request: Request, error: APIException):
-        return ApiResponse(status=False, code=error.code, message=error.message)
+        return ApiResponse(
+            status=False, code=error.code,
+            message=error.message, status_code=error.status_code
+        )
 
     @staticmethod
     async def handle_http_exception(request: Request, error: HTTPException):
