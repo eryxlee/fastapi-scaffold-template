@@ -138,10 +138,7 @@ class DescriptionMeta(SQLModelMetaclass):
         return new_class
 
 
-T = TypeVar('T')
-
-
-class TableBase(SQLModel, metaclass=DescriptionMeta):
+class Metadata(SQLModel, metaclass=DescriptionMeta):
     """ 数据库表公共属性模型定义 """
     __table_args__ = {
         "mysql_engine": "InnoDB",  # MySQL引擎
@@ -156,6 +153,12 @@ class TableBase(SQLModel, metaclass=DescriptionMeta):
         snake_case = re.sub(r"(?P<key>[A-Z])", r"_\g<key>", cls.__name__)
         return snake_case.lower().strip('_')
 
+
+T = TypeVar('T')
+
+
+class TableBase(SQLModel, metaclass=DescriptionMeta):
+    """ 数据库表公共属性模型定义 """
     @classmethod
     async def get(cls, session:Session, T, id: int = None) -> T | None:
         statement = select(T).where(T.id == id)
@@ -205,27 +208,3 @@ class TableBase(SQLModel, metaclass=DescriptionMeta):
         except Exception:
             await session.rollback()
             raise
-
-
-
-# class Base(DeclarativeBase):
-#     """ ORM 基类"""
-
-
-#     # json 输出
-#     def to_json(self):
-#         if hasattr(self, '__table__'):
-#             return {i.name: getattr(self, i.name) for i in self.__table__.columns}
-#         raise AssertionError('<%r> does not have attribute for __table__' % self)
-
-
-# class CommonMixin:
-#     """ 数据模型公共属性与方法"""
-#     __slots__ = ()
-
-#     is_deleted: Mapped[int | None] = \
-#         mapped_column(SmallInteger, server_default=text('0'), comment="是否删除: 0 未删除 1 已删除")
-#     create_time: Mapped[datetime | None] = \
-#         mapped_column(insert_default=func.now(), comment="创建时间")
-#     update_time: Mapped[datetime | None] = \
-#         mapped_column(server_default=func.now(), onupdate=func.now(), comment="更新时间")
