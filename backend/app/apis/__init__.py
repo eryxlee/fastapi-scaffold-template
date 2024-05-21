@@ -24,7 +24,7 @@ from app.config import settings
 from app.models.user import *
 from app.extensions.jwt import create_access_token
 
-from app.apis.user.services import UserService
+from app.services.user import UserService
 from app.apis.user.exception import *
 
 @base_router.get("/")

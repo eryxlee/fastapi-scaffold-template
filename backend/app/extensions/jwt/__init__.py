@@ -7,7 +7,7 @@ from pydantic import ValidationError
 from fastapi import HTTPException, Header, Depends, status
 from fastapi.security import OAuth2PasswordBearer
 
-from app.apis.user.services import UserService
+from app.services.user import UserService
 from app.config import settings
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")

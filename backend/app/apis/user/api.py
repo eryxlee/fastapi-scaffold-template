@@ -7,10 +7,10 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from app.config import settings
 from app.models.user import *
+from app.services.user import UserService
 from app.extensions.fastapi.pagination import PageQuery
 from app.extensions.jwt import create_access_token, check_jwt_token
 
-from .services import UserService
 from .exception import *
 
 router = APIRouter()
