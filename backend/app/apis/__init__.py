@@ -1,19 +1,13 @@
 # -*- coding: utf-8 -*-
 
-import pkgutil
-from importlib import import_module
 from fastapi import APIRouter
 
+from app.utils.routeutil import add_all_sub_routers
+import app.apis as api_module
+
 api_router = APIRouter()
-base_router = APIRouter()
-
-# 导入所有的子模块
-for module in pkgutil.iter_modules(['app/apis']):
-    if not module.ispkg:
-        continue
-
-    sub_api = import_module(f'app.apis.{module.name}')
-    api_router.include_router(sub_api.router, prefix=f"/{module.name}", tags=[module.name])
+# 不加本层的前缀，以免URL太长
+add_all_sub_routers(api_router, api_module, False)
 
 
 from datetime import timedelta
@@ -26,6 +20,9 @@ from app.extensions.jwt import create_access_token
 
 from app.services.user import UserService
 from app.apis.user.exception import *
+
+base_router = APIRouter()
+
 
 @base_router.get("/")
 async def hello():
