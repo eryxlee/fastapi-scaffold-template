@@ -34,7 +34,7 @@ COPY ./pyproject.toml ./poetry.lock* /code/
 ARG INSTALL_DEV=false
 RUN sh -c "if [ $INSTALL_DEV == 'true' ] ; then poetry install --no-root ; else poetry install --no-root --only main ; fi"
 
-ENV PYTHONPATH=/code
+ENV PYTHONPATH=/code PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 
 COPY ./log_conf.yaml ./manage.py ./.env* /code/
 
