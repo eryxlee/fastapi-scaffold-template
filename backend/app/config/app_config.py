@@ -13,7 +13,7 @@ from pydantic import (
     model_validator,
 )
 from pydantic_core import MultiHostUrl
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 def parse_cors(v: Any) -> list[str] | str:
@@ -146,11 +146,12 @@ class AppConfigSettings(BaseSettings):
     def EMAILS_ENABLED(self) -> bool:
         return bool(self.SMTP_HOST and self.EMAILS_FROM_EMAIL)
 
-    # 内部类，定义环境变量文件读取方式
-    class Config:
-        env_file_encoding = "utf-8"  # 指定环境变量文件的编码
+    # 定义环境变量文件读取方式
+    model_config = SettingsConfigDict(
+        env_file_encoding="utf-8"  # 指定环境变量文件的编码
         # env_file = ".env"
         # case_sensitive = True
         # env_prefix = "my_"
+    )
 
 settings = AppConfigSettings()
