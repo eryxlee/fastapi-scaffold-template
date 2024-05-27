@@ -1,15 +1,12 @@
 # -*- coding: utf-8 -*-
 
 from typing import Any
-from datetime import timedelta
 from fastapi import APIRouter, Depends
-from fastapi.security import OAuth2PasswordRequestForm
 
-from app.config import settings
 from app.models.user import *
 from app.services.user import UserService
+from app.extensions.auth import get_current_user, PermissionChecker
 from app.extensions.fastapi.pagination import PageQuery
-from app.extensions.jwt import create_access_token, check_jwt_token
 
 from .exception import *
 
@@ -18,12 +15,13 @@ router = APIRouter()
 
 @router.get(
     "/",
-    # dependencies=[Depends(check_jwt_token), Depends(get_current_active_superuser)],
+    dependencies=[Depends(PermissionChecker('sys:user:list'))],
     # response_model=UsersPublic,
 )
 async def read_users(
         page: PageQuery = None,
-        user_service: UserService = Depends(UserService)
+        user_service: UserService = Depends(UserService),
+        current_user: User = Depends(get_current_user)
 ) -> Any:
     """
     Retrieve users.
@@ -41,7 +39,7 @@ async def update_user_me(
     *,
     user_in: UserUpdate,
     user_service: UserService = Depends(UserService),
-    current_user: User = Depends(check_jwt_token)
+    current_user: User = Depends(get_current_user)
 ) -> Any:
     """ Update own user."""
 
@@ -56,7 +54,7 @@ async def update_user_me(
 
 
 @router.get("/me", response_model=User, response_model_exclude=("password"))
-async def user_me(current_user: User = Depends(check_jwt_token)):
+async def user_me(current_user: User = Depends(get_current_user)):
     """ 获取用户详情 """
     return current_user
 
@@ -79,7 +77,7 @@ async def user_signup(
 async def read_user_by_id(
     user_id: int,
     user_service: UserService = Depends(UserService),
-    current_user: User = Depends(check_jwt_token)
+    current_user: User = Depends(get_current_user)
 ) -> Any:
     """ 根据id访问用户信息 """
     user = await user_service.get(user_id)
@@ -97,7 +95,7 @@ async def update_user(
     user_id: int,
     user_in: UserUpdate,
     user_service: UserService = Depends(UserService),
-    current_user: User = Depends(check_jwt_token)
+    current_user: User = Depends(get_current_user)
 ) -> Any:
     """ 修改用户信息 """
 
@@ -117,7 +115,7 @@ async def update_user(
 async def user_delete(
     user_id: int,
     user_service: UserService = Depends(UserService),
-    current_user: User = Depends(check_jwt_token)
+    # current_user: User = Depends(check_jwt_token)
 ):
     """ 物理删除用户 """
     # TODO 权限判断，是否能删除
