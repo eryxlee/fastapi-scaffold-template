@@ -1,4 +1,30 @@
+# -*- coding: utf-8 -*-
 
+import pytest
+
+from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models.user import *
+from app.tests.datas.user_data import user_to_create, dataset, admin_client_header
+
+
+@pytest.mark.asyncio
+async def test_read_users_by_admin(
+    async_client: AsyncClient,
+    dataset,
+    admin_client_header: str,
+    api_prefix
+):
+    response = await async_client.get(
+        f'{api_prefix}/user/',
+        headers=admin_client_header,
+        params={"page":1, "page_size":10})
+    assert response.status_code == 200
+    data = response.json()
+    assert data['status'] == True
+    assert data['data']['page']["page"] == 1
+    assert data['data']['page']["total"] == 3
 
 # @pytest.mark.asyncio
 # async def test_user_create(self, client, init_db, user_to_create):

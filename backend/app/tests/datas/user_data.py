@@ -104,3 +104,14 @@ async def user_to_create():
             phone="123456",
             role_id=1
     )
+
+
+@pytest_asyncio.fixture(scope="function")
+async def admin_client_header(async_client):
+    admin_user = {
+        "username": "admin",
+        "password": "123456"
+    }
+    res = await async_client.post('/login', data=admin_user)
+    admin_client_token = res.json()['access_token']
+    yield {"Authorization": f"Bearer {admin_client_token}"}
