@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,6 +10,27 @@ from app.apis import api_router, base_router
 
 from app.extensions.fastapi.middleware import TimingMiddleware, MetaDataAdderMiddleware
 from app.extensions.fastapi.exception import GlobalExceptionHandler
+
+
+# 应用启动事件监听器
+async def startup_hook():
+    # 创建数据库表（如果尚未创建）
+    from app.models import init_db
+    await init_db()
+    # 你可以在这里执行其他需要在应用启动时执行的代码
+
+
+# # 应用关闭事件监听器
+async def shutdown_hook():
+    # 你可以在这里执行需要在应用关闭时执行的代码，比如关闭数据库连接等
+    pass
+
+
+@asynccontextmanager
+async def lifespan(application: FastAPI):
+    await startup_hook()
+    yield
+    await shutdown_hook()
 
 
 # 创建 FastAPI 应用实例
@@ -35,24 +57,8 @@ app.add_middleware(
 )
 # 统一异常输出结构
 GlobalExceptionHandler(app).init()
-
 # 设置静态文件目录
 app.mount("/static", StaticFiles(directory="static"), name="static")
-
-# 应用启动事件监听器
-@app.on_event("startup")
-async def startup_event():
-    # 创建数据库表（如果尚未创建）
-    from app.models import init_db
-    await init_db()
-    # 你可以在这里执行其他需要在应用启动时执行的代码
-
-# # 应用关闭事件监听器
-# @app.on_event("shutdown")
-# async def shutdown_event():
-#     # 你可以在这里执行需要在应用关闭时执行的代码，比如关闭数据库连接等
-#     pass
-
 # 将路由添加到应用中
 app.include_router(base_router)
 app.include_router(api_router, prefix=settings.API_PREFIX)
