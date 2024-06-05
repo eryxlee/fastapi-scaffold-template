@@ -1,17 +1,26 @@
 # -*- coding: utf-8 -*-
 
-from typing import Optional
-from pydantic import EmailStr
-from passlib.hash import pbkdf2_sha256
+import bcrypt
 
-from sqlalchemy import (
+from typing import List, Optional
+from pydantic import EmailStr
+
+from sqlmodel import (
+    SQLModel,
+    Field,
+    Relationship,
     String,
-    Integer,
     SmallInteger,
 )
-from sqlmodel import SQLModel, Field, Relationship
 
-from . import TimestampModel, IDModel, Metadata, TableBase, CommonPropertyModel
+from app.extensions.fastapi.pagination import PageSchemaOut
+from . import (
+    TimestampModel,
+    IDModel,
+    Metadata,
+    TableBase,
+    CommonPropertyModel
+)
 
 
 class UserBase(SQLModel):
@@ -51,63 +60,21 @@ class User(
     )
 
     def verify_password(self, raw_password) -> bool:
-        # 使用passlib验证密码
-        return pbkdf2_sha256.verify(raw_password, self.password)
+        if isinstance(raw_password, str):
+            raw_password = raw_password.encode()
+        return bcrypt.checkpw(raw_password, self.password.encode())
 
     @classmethod
     def encrypt_password(self, raw_password) -> str:
-        return pbkdf2_sha256.hash(raw_password)
+        return bcrypt.hashpw(raw_password.encode(), bcrypt.gensalt(12)).decode()
 
 
-class RoleResourceLink(Metadata, table=True):
-    role_id: int | None = Field(default=None, foreign_key="role.id", primary_key=True)
-    resource_id: int | None = Field(default=None, foreign_key="resource.id", primary_key=True)
+class UserListPage(SQLModel):
+    users: List[User]
+    page: PageSchemaOut
 
 
-class RoleBase(SQLModel):
-    name: str = Field(max_length=32, description="角色名称", sa_type=String(32))
-    code: str = Field(max_length=32, description="角色code", sa_type=String(32))
-    description: str = Field(default=None, max_length=255, nullable=True, description="描述", sa_type=String(255))
+class Token(SQLModel):
+    access_token: str
+    token_type: str
 
-
-class Role(
-    TimestampModel,
-    CommonPropertyModel,
-    RoleBase,
-    IDModel,
-    Metadata,
-    TableBase,
-    table=True):
-    users: list[User] = Relationship(
-        back_populates="role", sa_relationship_kwargs={"lazy": "selectin"}
-    )
-    resources: list["Resource"] = Relationship(
-        back_populates="roles",
-        link_model=RoleResourceLink,
-        sa_relationship_kwargs={"lazy": "selectin"}
-    )
-
-
-class ResourceBase(SQLModel):
-    name: str = Field(max_length=32, description="资源名称", sa_type=String(32))
-    level: int = Field(default=0, description="层级: 0 目录 1 菜单 2 权限", sa_type=SmallInteger)
-    pid: int = Field(default=0, description="父节点id", sa_type=Integer)
-    icon: str = Field(default=None, max_length=64, nullable=True, description="图标", sa_type=String(64))
-    menu_url: str = Field(default=None, max_length=64, nullable=True, description="页面路由", sa_type=String(64))
-    request_url: str = Field(default=None, max_length=64, nullable=True, description="请求url", sa_type=String(64))
-    permission_code: str = Field(default=None, max_length=32, nullable=True, description="权限code", sa_type=String(32))
-
-
-class Resource(
-    TimestampModel,
-    CommonPropertyModel,
-    ResourceBase,
-    IDModel,
-    Metadata,
-    TableBase,
-    table=True):
-    roles: list[Role] = Relationship(
-        back_populates="resources",
-        link_model=RoleResourceLink,
-        sa_relationship_kwargs={"lazy": "selectin"}
-    )

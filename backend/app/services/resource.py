@@ -6,7 +6,7 @@ from sqlmodel import func, select
 
 from app.models import get_session, Session
 from app.commons.enums import *
-from app.models.user import *
+from app.models.resource import *
 
 
 class ResourceService:

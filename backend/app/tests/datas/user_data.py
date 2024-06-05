@@ -4,6 +4,8 @@ from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.user import *
+from app.models.role import *
+from app.models.resource import *
 from app.services.user import UserService
 
 @pytest_asyncio.fixture(scope='function')

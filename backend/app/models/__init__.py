@@ -208,3 +208,7 @@ class TableBase(SQLModel, metaclass=DescriptionMeta):
         except Exception:
             await session.rollback()
             raise
+
+from app.models.user import UserCreate, UserUpdate, UserListPage, User, Token
+from app.models.role import Role, RoleResourceLink
+from app.models.resource import Resource
