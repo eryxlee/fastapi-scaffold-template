@@ -14,11 +14,10 @@ from sqlmodel import (
 )
 
 from app.extensions.fastapi.pagination import PageSchemaOut
-from . import (
+from app.extensions.fastapi.model import (
     TimestampModel,
     IDModel,
     Metadata,
-    TableBase,
     CommonPropertyModel
 )
 
@@ -49,7 +48,6 @@ class User(
     UserCreate,
     IDModel,
     Metadata,
-    TableBase,
     table = True):
     """ 展示用户详情信息的用户模型 """
     is_active: int = Field(default=0, nullable=True, description="是否激活", sa_type=SmallInteger)

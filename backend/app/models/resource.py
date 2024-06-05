@@ -12,11 +12,10 @@ from sqlmodel import (
 )
 
 from app.extensions.fastapi.pagination import PageSchemaOut
-from . import (
+from app.extensions.fastapi.model import (
     TimestampModel,
     IDModel,
     Metadata,
-    TableBase,
     CommonPropertyModel
 )
 from .role import Role, RoleResourceLink
@@ -38,7 +37,6 @@ class Resource(
     ResourceBase,
     IDModel,
     Metadata,
-    TableBase,
     table=True):
     roles: list[Role] = Relationship(
         back_populates="resources",

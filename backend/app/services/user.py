@@ -4,16 +4,17 @@ from fastapi import Depends
 from sqlmodel import func, select
 
 from app.models import get_session, Session
+from app.extensions.fastapi.service import ServiceBase
 from app.commons.enums import *
 from app.models.user import *
 
 
-class UserService:
+class UserService(ServiceBase[User]):
     def __init__(self, session: Session = Depends(get_session)):
         self.session = session
 
     async def get(self, id: int = None) -> User | None:
-        return await User.get(self.session, User, id)
+        return await self.get(self.session, User, id)
 
     async def create(self, user_create: UserCreate) -> User:
         user = User.model_validate(
@@ -25,7 +26,7 @@ class UserService:
             }
         )
 
-        await user.save(self.session)
+        await self.save(self.session, user)
         return user
 
     async def patch_by_obj(self, target_user: User, data: UserUpdate) -> User:
@@ -36,7 +37,7 @@ class UserService:
             hashed_password = User.encrypt_password(password)
             values["password"] = hashed_password
 
-        await target_user.update(self.session, **values)
+        await self.update(self.session, target_user, **values)
         return target_user
 
     async def patch(self, id: int, data: UserUpdate) -> User:
@@ -48,11 +49,11 @@ class UserService:
             hashed_password = User.encrypt_password(password)
             values["password"] = hashed_password
 
-        await user.update(self.session, **values)
+        await self.update(self.session, user, **values)
         return user
 
     async def delete(self, id: int) -> bool:
-        await User.delete_without_select(self.session, User, id)
+        await self.delete_without_select(self.session, User, id)
         return True
 
     async def get_user_by_name(self, username: str = None)-> User | None:

@@ -10,14 +10,12 @@ from sqlmodel import (
 )
 
 from app.extensions.fastapi.pagination import PageSchemaOut
-from . import (
+from app.extensions.fastapi.model import (
     TimestampModel,
     IDModel,
     Metadata,
-    TableBase,
     CommonPropertyModel
 )
-
 
 
 class RoleResourceLink(Metadata, table=True):
@@ -37,7 +35,6 @@ class Role(
     RoleBase,
     IDModel,
     Metadata,
-    TableBase,
     table=True):
     users: list["User"] = Relationship(
         back_populates="role", sa_relationship_kwargs={"lazy": "selectin"}
@@ -47,5 +44,3 @@ class Role(
         link_model=RoleResourceLink,
         sa_relationship_kwargs={"lazy": "selectin"}
     )
-
-
