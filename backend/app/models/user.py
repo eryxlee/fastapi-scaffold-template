@@ -18,17 +18,21 @@ from app.extensions.fastapi.model import (
     TimestampModel,
     IDModel,
     Metadata,
-    CommonPropertyModel
+    CommonPropertyModel,
+    SortModel,
+    DatetimeFormatModel,
+    PublicBaseModel,
+    AliasCamelModel
 )
 
 
 class UserBase(SQLModel):
     """ 用户模型公共部分 """
     name: str = Field(default=None, max_length=60, nullable=False, description="用户名", sa_type=String(60))
-    avatar: str = Field(default=None, max_length=128, nullable=True, description="头像", sa_type=String(128))
-    email: EmailStr = Field(default=None, max_length=128, nullable=True, description="邮件", sa_type=String(128))
-    gender: int = Field(default=None, nullable=True, description="性别", sa_type=SmallInteger)
-    phone: str = Field(default=None, max_length=36, nullable=True, description="电话", sa_type=String(36))
+    avatar: str | None = Field(default=None, max_length=128, nullable=True, description="头像", sa_type=String(128))
+    email: EmailStr | None = Field(default=None, max_length=128, nullable=True, description="邮件", sa_type=String(128))
+    gender: int | None = Field(default=None, nullable=True, description="性别", sa_type=SmallInteger)
+    phone: str | None = Field(default=None, max_length=36, nullable=True, description="电话", sa_type=String(36))
     role_id: int= Field(default=None, foreign_key="role.id")
 
 
@@ -42,6 +46,17 @@ class UserUpdate(UserCreate):
     pass
 
 
+class UserPublic(
+    UserBase,
+    PublicBaseModel,
+    SortModel,
+    DatetimeFormatModel,
+    AliasCamelModel,
+):
+    """ 展示用户信息的模型 """
+    is_active: int
+
+
 class User(
     TimestampModel,
     CommonPropertyModel,
@@ -49,7 +64,7 @@ class User(
     IDModel,
     Metadata,
     table = True):
-    """ 展示用户详情信息的用户模型 """
+    """ 用户详情信息的用户模型 """
     is_active: int = Field(default=0, nullable=True, description="是否激活", sa_type=SmallInteger)
 
     # 多对一关系，需要定义一个role_id字段
@@ -68,7 +83,7 @@ class User(
 
 
 class UserListPage(SQLModel):
-    users: List[User]
+    users: List[UserPublic]
     page: PageSchemaOut
 
 

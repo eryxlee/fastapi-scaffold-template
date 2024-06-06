@@ -5,10 +5,12 @@ import re
 import uuid
 
 from ast import Dict, Tuple
-from typing import Any, Type
+from typing import Any, Type, Literal, Dict as DictType
 from functools import partial
 from datetime import datetime, UTC
+from pydantic import model_serializer, ConfigDict
 from pydantic_core import PydanticUndefined
+from pydantic.alias_generators import to_camel
 
 from sqlalchemy.orm import declared_attr
 from sqlmodel import SQLModel, Field, text, String
@@ -119,3 +121,42 @@ class Metadata(SQLModel, metaclass=DescriptionMeta):
     def __tablename__(cls) -> str:
         snake_case = re.sub(r"(?P<key>[A-Z])", r"_\g<key>", cls.__name__)
         return snake_case.lower().strip('_')
+
+
+class SortModel(SQLModel):
+    """支持模型json序列化的时候按照key进行排序"""
+    @model_serializer(when_used='json')
+    def sort_model(self) -> DictType[str, Any]:
+        return dict(sorted(self.model_dump().items()))
+
+
+class DatetimeFormatModel(SQLModel):
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.strftime('%Y-%m-%d %H:%M')})
+
+
+class PublicBaseModel(SQLModel):
+    id: int
+    create_time: datetime
+    update_time: datetime
+
+
+class AliasCamelModel(SQLModel):
+    def model_dump(
+        self,
+        *,
+        mode: Literal['json', 'python'] | str = 'python',
+        include=None,
+        exclude=None,
+        by_alias: bool = False,
+        exclude_unset: bool = False,
+        exclude_defaults: bool = False,
+        exclude_none: bool = False,
+        round_trip: bool = False,
+        warnings: bool = True,
+) -> dict[str, Any]:
+        return self.__pydantic_serializer__.to_python(
+            self, mode=mode, include=include, exclude=exclude, by_alias=True,
+            exclude_unset=exclude_unset, exclude_defaults=exclude_defaults,
+            exclude_none=True, round_trip=round_trip, warnings=warnings)
+
+    model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)

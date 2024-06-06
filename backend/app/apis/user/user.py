@@ -21,7 +21,6 @@ router = APIRouter()
 async def read_users(
         page: PageQuery = None,
         user_service: UserService = Depends(UserService),
-        current_user: User = Depends(get_current_user)
 ) -> Any:
     """
     Retrieve users.
@@ -30,9 +29,8 @@ async def read_users(
     users = await user_service.get_user_list(page.offset, page.limit)
     from app.extensions.fastapi.pagination import PageSchemaOut
     page_out = PageSchemaOut.model_validate(page, update={"total": count})
-    users_page = UserListPage(users=users, page=page_out)
 
-    return users_page
+    return UserListPage(users=users, page=page_out)
 
 
 @router.patch("/me", response_model=User)
