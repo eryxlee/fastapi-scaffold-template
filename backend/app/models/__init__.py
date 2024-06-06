@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from collections.abc import AsyncGenerator
-from pydantic_core import PydanticUndefined
 
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine
@@ -10,6 +9,10 @@ from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession as Session
 
 from app.config import settings
+from app.models.user import *
+from app.models.role import *
+from app.models.resource import *
+
 
 # 采用配置变量创建数据库引擎
 async_engine = create_async_engine(
@@ -35,8 +38,3 @@ async def init_db() -> None:
     async with async_engine.begin() as conn:
         # await conn.run_sync(SQLModel.metadata.drop_all)
         await conn.run_sync(SQLModel.metadata.create_all)
-
-
-from app.models.user import UserCreate, UserUpdate, UserListPage, User, Token
-from app.models.role import Role, RoleResourceLink
-from app.models.resource import Resource

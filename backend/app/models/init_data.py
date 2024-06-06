@@ -4,6 +4,8 @@ from sqlmodel import select, func
 
 from app.models import async_session, init_db
 from app.models.user import *
+from app.models.role import *
+from app.models.resource import *
 
 
 async def init_data():
