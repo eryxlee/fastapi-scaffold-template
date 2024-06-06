@@ -13,7 +13,7 @@ from sqlmodel import (
     SmallInteger,
 )
 
-from app.extensions.fastapi.pagination import PageSchemaOut
+from app.extensions.fastapi.pagination import PageModel
 from app.extensions.fastapi.model import (
     TimestampModel,
     IDModel,
@@ -84,7 +84,7 @@ class User(
 
 class UserListPage(SQLModel):
     users: List[UserPublic]
-    page: PageSchemaOut
+    page: PageModel
 
 
 class Token(SQLModel):

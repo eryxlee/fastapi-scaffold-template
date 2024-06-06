@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends
 from app.models.user import *
 from app.services.user import UserService
 from app.extensions.auth import get_current_user, PermissionChecker
-from app.extensions.fastapi.pagination import PageQuery
+from app.extensions.fastapi.pagination import PageQueryParam
 
 from .exception import *
 
@@ -19,14 +19,14 @@ router = APIRouter()
     response_model=UserListPage,
 )
 async def read_users(
-        page: PageQuery = None,
+        page: PageQueryParam = None,
         user_service: UserService = Depends(UserService),
 ) -> Any:
     """ 读取所有用户信息"""
     count = await user_service.get_user_list_count()
     users = await user_service.get_user_list(page.offset, page.limit)
-    from app.extensions.fastapi.pagination import PageSchemaOut
-    page_out = PageSchemaOut.model_validate(page, update={"total": count})
+    from app.extensions.fastapi.pagination import PageModel
+    page_out = PageModel.model_validate(page, update={"total": count})
 
     return UserListPage(users=users, page=page_out)
 

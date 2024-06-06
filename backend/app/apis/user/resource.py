@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends
 
 from app.models.user import *
 from app.services.resource import ResourceService
-from app.extensions.fastapi.pagination import PageQuery, PageSchemaOut
+from app.extensions.fastapi.pagination import PageQueryParam, PageModel
 
 from .exception import *
 
@@ -18,7 +18,7 @@ router = APIRouter()
     # response_model=UsersPublic,
 )
 async def read_resources(
-        page: PageQuery = None,
+        page: PageQueryParam = None,
         resource_service: ResourceService = Depends(ResourceService)
 ) -> Any:
     """
@@ -26,6 +26,6 @@ async def read_resources(
     """
     count = await resource_service.get_resource_list_count()
     resources = await resource_service.get_resource_list(page.offset, page.limit)
-    page_out = PageSchemaOut.model_validate(page, update={"total": count})
+    page_out = PageModel.model_validate(page, update={"total": count})
 
     return {"data": resources, "page": page_out}

@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends
 
 from app.models.user import *
 from app.services.role import RoleService
-from app.extensions.fastapi.pagination import PageQuery, PageSchemaOut
+from app.extensions.fastapi.pagination import PageQueryParam, PageModel
 
 from .exception import *
 
@@ -18,7 +18,7 @@ router = APIRouter()
     # response_model=UsersPublic,
 )
 async def read_roles(
-        page: PageQuery = None,
+        page: PageQueryParam = None,
         role_service: RoleService = Depends(RoleService)
 ) -> Any:
     """
@@ -26,6 +26,6 @@ async def read_roles(
     """
     count = await role_service.get_role_list_count()
     roles = await role_service.get_role_list(page.offset, page.limit)
-    page_out = PageSchemaOut.model_validate(page, update={"total": count})
+    page_out = PageModel.model_validate(page, update={"total": count})
 
     return {"data": roles, "page": page_out}
