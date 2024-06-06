@@ -17,7 +17,7 @@ poetry install --no-root
 如果不想用现有的poetry配置，可以删掉两个poetry文件，按如下配置：
 ```shell
 poetry source add --priority=primary mirrors https://pypi.tuna.tsinghua.edu.cn/simple/
-poetry add fastapi uvicorn[standard] pydantic[email] pydantic_settings aiomysql sqlmodel passlib python-jose
+poetry add fastapi uvicorn[standard] pydantic[email] pydantic_settings aiomysql sqlmodel bcrypt python-jose
 poetry add httpx pytest pytest_asyncio pytest-timeout pytest-cov --group dev
 ```
 

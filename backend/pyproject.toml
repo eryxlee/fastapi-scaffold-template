@@ -13,8 +13,8 @@ pydantic = {extras = ["email"], version = "^2.7.1"}
 pydantic-settings = "^2.2.1"
 aiomysql = "^0.2.0"
 sqlmodel = "^0.0.18"
-passlib = "^1.7.4"
 python-jose = "^3.3.0"
+bcrypt = "^4.1.3"
 
 
 [[tool.poetry.source]]
