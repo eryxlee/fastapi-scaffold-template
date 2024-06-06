@@ -22,9 +22,7 @@ async def read_users(
         page: PageQuery = None,
         user_service: UserService = Depends(UserService),
 ) -> Any:
-    """
-    Retrieve users.
-    """
+    """ 读取所有用户信息"""
     count = await user_service.get_user_list_count()
     users = await user_service.get_user_list(page.offset, page.limit)
     from app.extensions.fastapi.pagination import PageSchemaOut
@@ -33,14 +31,22 @@ async def read_users(
     return UserListPage(users=users, page=page_out)
 
 
-@router.patch("/me", response_model=User)
+@router.get("/me", response_model=UserPublic)
+async def user_me(
+    current_user: User = Depends(get_current_user)
+) -> Any:
+    """ 获取当前用户详情 """
+    return current_user
+
+
+@router.patch("/me", response_model=UserPublic)
 async def update_user_me(
     *,
     user_in: UserUpdate,
     user_service: UserService = Depends(UserService),
     current_user: User = Depends(get_current_user)
 ) -> Any:
-    """ Update own user."""
+    """ 修改当前用户信息"""
 
     if user_in.name:
         existing_user = await user_service.get_user_by_name(user_in.name)
@@ -52,43 +58,41 @@ async def update_user_me(
     return current_user
 
 
-@router.get("/me", response_model=User, response_model_exclude=("password"))
-async def user_me(current_user: User = Depends(get_current_user)):
-    """ 获取用户详情 """
-    return current_user
-
-
-@router.post("/signup")
+@router.post("/signup", response_model=UserPublic)
 async def user_signup(
-    user_data: UserCreate,
+    user_in: UserCreate,
     user_service: UserService = Depends(UserService),
-) -> User:
+) -> Any:
     """ 注册新用户"""
-    existing_user = await user_service.get_user_by_name(user_data.name)  # 获取用户信息
+    existing_user = await user_service.get_user_by_name(user_in.name)  # 获取用户信息
     if existing_user:
         raise UsernameUsedException()
 
-    user_obj = await user_service.create(user_data)
+    user_obj = await user_service.create(user_in)
     return user_obj
 
 
-@router.get("/{user_id}", response_model=User, response_model_exclude=("password"))
+@router.get(
+    "/{user_id}",
+    dependencies=[Depends(PermissionChecker('sys:user:list'))],
+    response_model=UserPublic
+)
 async def read_user_by_id(
     user_id: int,
     user_service: UserService = Depends(UserService),
     current_user: User = Depends(get_current_user)
 ) -> Any:
     """ 根据id访问用户信息 """
-    user = await user_service.get(user_id)
-    if user == current_user:
-        return user
-
-    # TODO 如果不是管理员，无权访问其他用户信息
-
-    return user
+    if user_id == current_user.id:
+        return current_user
+    return await user_service.get(user_id)
 
 
-@router.patch("/{user_id}", response_model=User)
+@router.patch(
+    "/{user_id}",
+    dependencies=[Depends(PermissionChecker('sys:user:update'))],
+    response_model=UserPublic
+)
 async def update_user(
     *,
     user_id: int,
@@ -97,8 +101,10 @@ async def update_user(
     current_user: User = Depends(get_current_user)
 ) -> Any:
     """ 修改用户信息 """
-
-    db_user = await user_service.get(user_id)
+    if user_id == current_user.id:
+        db_user = current_user
+    else:
+        db_user = await user_service.get(user_id)
     if not db_user:
         raise UserNotFoundException()
     if user_in.name:
@@ -110,14 +116,14 @@ async def update_user(
     return db_user
 
 
-@router.delete("/{user_id}")
+@router.delete(
+    "/{user_id}",
+    dependencies=[Depends(PermissionChecker('sys:user:update'))],
+)
 async def user_delete(
     user_id: int,
     user_service: UserService = Depends(UserService),
-    # current_user: User = Depends(check_jwt_token)
-):
+) -> Any:
     """ 物理删除用户 """
-    # TODO 权限判断，是否能删除
-
     await user_service.delete(user_id)
     return {}

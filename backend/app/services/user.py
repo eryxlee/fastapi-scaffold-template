@@ -14,7 +14,7 @@ class UserService(ServiceBase[User]):
         self.session = session
 
     async def get(self, id: int = None) -> User | None:
-        return await self.get(self.session, User, id)
+        return await super(UserService, self).get(self.session, User, id)
 
     async def create(self, user_create: UserCreate) -> User:
         user = User.model_validate(
