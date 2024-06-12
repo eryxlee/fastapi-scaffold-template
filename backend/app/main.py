@@ -9,7 +9,7 @@ from app.config import settings
 from app.apis import api_router, base_router
 
 from app.extensions.fastapi.middleware import TimingMiddleware, MetaDataAdderMiddleware
-from app.extensions.fastapi.exception import GlobalExceptionHandler
+from app.extensions.fastapi.exception import register_global_exception
 
 
 # 应用启动事件监听器
@@ -56,9 +56,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 # 统一异常输出结构
-GlobalExceptionHandler(app).init()
+register_global_exception(app)
 # 设置静态文件目录
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# app.mount("/static", StaticFiles(directory="static"), name="static")
 # 将路由添加到应用中
 app.include_router(base_router)
 app.include_router(api_router, prefix=settings.API_PREFIX)
