@@ -5,8 +5,12 @@ from sqlmodel import func, select
 
 from app.models import get_session, Session
 from app.extensions.fastapi.service import ServiceBase
-from app.commons.enums import *
-from app.models.user import *
+from app.commons.enums import DeleteStatus, UserAvailableStatus
+from app.models.user import (
+    User,
+    UserCreate,
+    UserUpdate,
+)
 
 
 class UserService(ServiceBase[User]):

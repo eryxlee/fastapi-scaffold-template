@@ -3,12 +3,18 @@
 from typing import Any
 from fastapi import APIRouter, Depends
 
-from app.models.user import *
+from app.models.user import (
+    User,
+    UserPublic,
+    UserListPage,
+    UserUpdate,
+    UserCreate
+)
 from app.services.user import UserService
 from app.extensions.auth import get_current_user, PermissionChecker
 from app.extensions.fastapi.pagination import PageQueryParam
 
-from .exception import *
+from .exception import UserNotFoundException, UsernameUsedException
 
 router = APIRouter()
 

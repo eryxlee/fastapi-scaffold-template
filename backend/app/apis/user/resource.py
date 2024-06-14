@@ -3,11 +3,9 @@
 from typing import Any
 from fastapi import APIRouter, Depends
 
-from app.models.user import *
 from app.services.resource import ResourceService
 from app.extensions.fastapi.pagination import PageQueryParam, PageModel
 
-from .exception import *
 
 router = APIRouter()
 
