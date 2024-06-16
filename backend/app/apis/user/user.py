@@ -131,5 +131,5 @@ async def user_delete(
     user_service: UserService = Depends(UserService),
 ) -> Any:
     """ 物理删除用户 """
-    await user_service.delete(user_id)
+    await user_service.delete_by_id(user_id)
     return {}

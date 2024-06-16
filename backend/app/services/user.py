@@ -15,10 +15,7 @@ from app.models.user import (
 
 class UserService(ServiceBase[User]):
     def __init__(self, session: Session = Depends(get_session)):
-        self.session = session
-
-    async def get(self, id: int = None) -> User | None:
-        return await super(UserService, self).get(self.session, User, id)
+        super(UserService, self).__init__(User, session)
 
     async def create(self, user_create: UserCreate) -> User:
         user = User.model_validate(
@@ -30,7 +27,7 @@ class UserService(ServiceBase[User]):
             }
         )
 
-        await self.save(self.session, user)
+        await self.save(user)
         return user
 
     async def patch_by_obj(self, target_user: User, data: UserUpdate) -> User:
@@ -41,7 +38,7 @@ class UserService(ServiceBase[User]):
             hashed_password = User.encrypt_password(password)
             values["password"] = hashed_password
 
-        await self.update(self.session, target_user, **values)
+        await self.update(target_user, **values)
         return target_user
 
     async def patch(self, id: int, data: UserUpdate) -> User:
@@ -53,12 +50,8 @@ class UserService(ServiceBase[User]):
             hashed_password = User.encrypt_password(password)
             values["password"] = hashed_password
 
-        await self.update(self.session, user, **values)
+        await self.update(user, **values)
         return user
-
-    async def delete(self, id: int) -> bool:
-        await self.delete_without_select(self.session, User, id)
-        return True
 
     async def get_user_by_name(self, username: str = None)-> User | None:
         statement = select(User).where(User.name == username)
