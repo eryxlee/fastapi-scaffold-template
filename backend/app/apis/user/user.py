@@ -2,6 +2,7 @@
 
 from typing import Any
 from fastapi import APIRouter, Depends
+from fastapi_cache.decorator import cache
 
 from app.models.user import (
     User,
@@ -12,6 +13,7 @@ from app.models.user import (
 )
 from app.services.user import UserService
 from app.extensions.auth import get_current_user, PermissionChecker
+from app.extensions.cache import request_key_builder
 from app.extensions.fastapi.pagination import PageQueryParam
 
 from .exception import UserNotFoundException, UsernameUsedException
@@ -24,6 +26,7 @@ router = APIRouter()
     dependencies=[Depends(PermissionChecker('sys:user:list'))],
     response_model=UserListPage,
 )
+@cache(expire=60, key_builder=request_key_builder)
 async def read_users(
         page: PageQueryParam = None,
         user_service: UserService = Depends(UserService),
@@ -38,6 +41,7 @@ async def read_users(
 
 
 @router.get("/me", response_model=UserPublic)
+@cache(expire=60, key_builder=request_key_builder)
 async def user_me(
     current_user: User = Depends(get_current_user)
 ) -> Any:
@@ -83,6 +87,7 @@ async def user_signup(
     dependencies=[Depends(PermissionChecker('sys:user:list'))],
     response_model=UserPublic
 )
+@cache(expire=60, key_builder=request_key_builder)
 async def read_user_by_id(
     user_id: int,
     user_service: UserService = Depends(UserService),

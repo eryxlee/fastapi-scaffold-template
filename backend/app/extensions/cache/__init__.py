@@ -27,3 +27,26 @@ def noself_key_builder(
         ).hexdigest()
     )
     return cache_key
+
+
+def request_key_builder(
+    func: Callable,
+    namespace: Optional[str] = "",
+    request: Optional[Request] = None,
+    response: Optional[Response] = None,
+    args: Optional[tuple] = None,
+    kwargs: Optional[dict] = None,
+) -> str:
+    from fastapi_cache import FastAPICache
+
+    prefix = f"{FastAPICache.get_prefix()}:{namespace}:"
+    query_params = repr(sorted(request.query_params.items()))
+    header_params = repr(sorted(request.headers.items()))
+    cache_key = (
+        prefix
+        + hashlib.md5(
+            f"{request.method.lower()}:{request.url.path}:{query_params}:{header_params}".encode()
+        ).hexdigest()
+    )
+
+    return cache_key
