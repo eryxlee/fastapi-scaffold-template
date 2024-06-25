@@ -2,12 +2,13 @@
 
 import json
 import time
+from datetime import datetime, timedelta
 
 from fastapi import Request, Response
-
-from starlette.types import ASGIApp, Receive, Scope, Send, Message
-from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
+from fastapi.responses import JSONResponse
 from starlette.datastructures import MutableHeaders
+from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 
 # https://github.com/tiangolo/fastapi/discussions/6223
@@ -22,34 +23,39 @@ class TimingMiddleware(BaseHTTPMiddleware):
 
 # https://github.com/tiangolo/fastapi/issues/4766
 class MetaDataAdderMiddleware:
-    application_generic_urls = ['/openapi.json',
-                                '/docs', '/docs/oauth2-redirect',
-                                '/redoc',
-                                '/ws',
-                                '/static']
+    application_generic_urls = [
+        "/openapi.json",
+        "/docs",
+        "/docs/oauth2-redirect",
+        "/redoc",
+        "/ws",
+        "/static",
+    ]
 
-    def __init__(
-            self,
-            app: ASGIApp
-    ) -> None:
+    def __init__(self, app: ASGIApp) -> None:
         self.app = app
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        if scope["type"] == "http" and not any([scope["path"].startswith(endpoint) for endpoint in MetaDataAdderMiddleware.application_generic_urls]):
-            responder = MetaDataAdderMiddlewareResponder(self.app) #, self.standard_meta_data, self.additional_custom_information)
+        if scope["type"] == "http" and not any(
+            [
+                scope["path"].startswith(endpoint)
+                for endpoint in MetaDataAdderMiddleware.application_generic_urls
+            ]
+        ):
+            responder = MetaDataAdderMiddlewareResponder(
+                self.app
+            )  # , self.standard_meta_data, self.additional_custom_information)
             await responder(scope, receive, send)
             return
         await self.app(scope, receive, send)
 
 
 class MetaDataAdderMiddlewareResponder:
-
     def __init__(
-            self,
-            app: ASGIApp,
+        self,
+        app: ASGIApp,
     ) -> None:
-        """
-        """
+        """"""
         self.app = app
         self.initial_message: Message = {}
 
@@ -58,7 +64,6 @@ class MetaDataAdderMiddlewareResponder:
         await self.app(scope, receive, self.send_with_meta_response)
 
     async def send_with_meta_response(self, message: Message):
-
         message_type = message["type"]
         if message_type == "http.response.start":
             # Don't send the initial message until we've determined how to
@@ -70,7 +75,7 @@ class MetaDataAdderMiddlewareResponder:
                 response_body = json.loads(message["body"].decode())
 
                 data = {}
-                if not isinstance(response_body, dict) or response_body.get("status") == None:
+                if not isinstance(response_body, dict) or response_body.get("status") is None:
                     data["status"] = True
                     data["code"] = 0
                     data["message"] = "成功"
@@ -88,8 +93,6 @@ class MetaDataAdderMiddlewareResponder:
             await self.send(message)
 
 
-from fastapi.responses import JSONResponse
-from datetime import datetime, timedelta
 # immediately after imports
 # https://semaphoreci.com/blog/custom-middleware-fastapi
 class RateLimitingMiddleware(BaseHTTPMiddleware):
@@ -120,7 +123,7 @@ class RateLimitingMiddleware(BaseHTTPMiddleware):
                 # If the request count exceeds the rate limit, return a JSON response with an error message
                 return JSONResponse(
                     status_code=429,
-                    content={"message": "Rate limit exceeded. Please try again later."}
+                    content={"message": "Rate limit exceeded. Please try again later."},
                 )
             request_count += 1
 

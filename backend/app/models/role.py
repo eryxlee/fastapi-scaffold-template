@@ -1,21 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from typing import List, Optional
+from sqlmodel import Field, Relationship, SQLModel, String
 
-from sqlmodel import (
-    SQLModel,
-    Field,
-    Relationship,
-    String,
-)
-
-from app.extensions.fastapi.pagination import PageModel
-from app.extensions.fastapi.model import (
-    TimestampModel,
-    IDModel,
-    Metadata,
-    CommonPropertyModel
-)
+from ..extensions.fastapi.model import CommonPropertyModel, IDModel, Metadata, TimestampModel
 
 
 class RoleResourceLink(Metadata, table=True):
@@ -26,21 +13,21 @@ class RoleResourceLink(Metadata, table=True):
 class RoleBase(SQLModel):
     name: str = Field(max_length=32, description="角色名称", sa_type=String(32))
     code: str = Field(max_length=32, description="角色code", sa_type=String(32))
-    description: str = Field(default=None, max_length=255, nullable=True, description="描述", sa_type=String(255))
+    description: str = Field(
+        default=None,
+        max_length=255,
+        nullable=True,
+        description="描述",
+        sa_type=String(255),
+    )
 
 
-class Role(
-    TimestampModel,
-    CommonPropertyModel,
-    RoleBase,
-    IDModel,
-    Metadata,
-    table=True):
-    users: list["User"] = Relationship(
+class Role(TimestampModel, CommonPropertyModel, RoleBase, IDModel, Metadata, table=True):
+    users: list["User"] = Relationship(  # noqa: F821
         back_populates="role", sa_relationship_kwargs={"lazy": "selectin"}
     )
-    resources: list["Resource"] = Relationship(
+    resources: list["Resource"] = Relationship(  # noqa: F821
         back_populates="roles",
         link_model=RoleResourceLink,
-        sa_relationship_kwargs={"lazy": "selectin"}
+        sa_relationship_kwargs={"lazy": "selectin"},
     )

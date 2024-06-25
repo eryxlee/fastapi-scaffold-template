@@ -1,49 +1,75 @@
 # -*- coding: utf-8 -*-
 
-import bcrypt
-
 from typing import List, Optional
+
+import bcrypt
 from pydantic import EmailStr
+from sqlmodel import Field, Relationship, SmallInteger, SQLModel, String
 
-from sqlmodel import (
-    SQLModel,
-    Field,
-    Relationship,
-    String,
-    SmallInteger,
-)
-
-from app.extensions.fastapi.pagination import PageModel
-from app.extensions.fastapi.model import (
-    TimestampModel,
+from ..extensions.fastapi.model import (
+    AliasCamelModel,
+    CommonPropertyModel,
+    DatetimeFormatModel,
     IDModel,
     Metadata,
-    CommonPropertyModel,
-    SortModel,
-    DatetimeFormatModel,
     PublicBaseModel,
-    AliasCamelModel
+    SortModel,
+    TimestampModel,
 )
+from ..extensions.fastapi.pagination import PageModel
 
 
 class UserBase(SQLModel):
-    """ 用户模型公共部分 """
-    name: str = Field(default=None, max_length=60, nullable=False, description="用户名", sa_type=String(60))
-    avatar: str | None = Field(default=None, max_length=128, nullable=True, description="头像", sa_type=String(128))
-    email: EmailStr | None = Field(default=None, max_length=128, nullable=True, description="邮件", sa_type=String(128))
-    gender: int | None = Field(default=None, nullable=True, description="性别", sa_type=SmallInteger)
-    phone: str | None = Field(default=None, max_length=36, nullable=True, description="电话", sa_type=String(36))
-    role_id: int= Field(default=None, foreign_key="role.id")
+    """用户模型公共部分."""
+
+    name: str = Field(
+        default=None,
+        max_length=60,
+        nullable=False,
+        description="用户名",
+        sa_type=String(60),
+    )
+    avatar: str | None = Field(
+        default=None,
+        max_length=128,
+        nullable=True,
+        description="头像",
+        sa_type=String(128),
+    )
+    email: EmailStr | None = Field(
+        default=None,
+        max_length=128,
+        nullable=True,
+        description="邮件",
+        sa_type=String(128),
+    )
+    gender: int | None = Field(
+        default=None, nullable=True, description="性别", sa_type=SmallInteger
+    )
+    phone: str | None = Field(
+        default=None,
+        max_length=36,
+        nullable=True,
+        description="电话",
+        sa_type=String(36),
+    )
+    role_id: int = Field(default=None, foreign_key="role.id")
 
 
 class UserCreate(UserBase):
-    """ 注册时采用的用户模型 """
-    password: str = Field(default=None, max_length=128, nullable=False, description="密码", sa_type=String(128))
+    """注册时采用的用户模型."""
+
+    password: str = Field(
+        default=None,
+        max_length=128,
+        nullable=False,
+        description="密码",
+        sa_type=String(128),
+    )
 
 
 class UserUpdate(UserCreate):
-    """ 更新时采用的用户模型 """
-    pass
+    """更新时采用的用户模型."""
 
 
 class UserPublic(
@@ -53,22 +79,18 @@ class UserPublic(
     DatetimeFormatModel,
     AliasCamelModel,
 ):
-    """ 展示用户信息的模型 """
+    """展示用户信息的模型."""
+
     is_active: int
 
 
-class User(
-    TimestampModel,
-    CommonPropertyModel,
-    UserCreate,
-    IDModel,
-    Metadata,
-    table = True):
-    """ 用户详情信息的用户模型 """
+class User(TimestampModel, CommonPropertyModel, UserCreate, IDModel, Metadata, table=True):
+    """用户详情信息的用户模型."""
+
     is_active: int = Field(default=0, nullable=True, description="是否激活", sa_type=SmallInteger)
 
     # 多对一关系，需要定义一个role_id字段
-    role: Optional["Role"] = Relationship(
+    role: Optional["Role"] = Relationship(  # noqa: F821
         back_populates="users", sa_relationship_kwargs={"lazy": "joined"}
     )
 
@@ -90,4 +112,3 @@ class UserListPage(SQLModel):
 class Token(SQLModel):
     access_token: str
     token_type: str
-

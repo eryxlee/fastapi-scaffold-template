@@ -3,22 +3,24 @@ from __future__ import annotations
 
 import re
 import uuid
-
 from ast import Dict, Tuple
-from typing import Any, Type, Literal, Dict as DictType
+from datetime import UTC, datetime
 from functools import partial
-from datetime import datetime, UTC
-from pydantic import model_serializer, ConfigDict
-from pydantic_core import PydanticUndefined
-from pydantic.alias_generators import to_camel
+from typing import Any
+from typing import Dict as DictType
+from typing import Literal, Type
 
+from pydantic import ConfigDict, model_serializer
+from pydantic.alias_generators import to_camel
+from pydantic_core import PydanticUndefined
 from sqlalchemy.orm import declared_attr
-from sqlmodel import SQLModel, Field, text, String
+from sqlmodel import Field, SQLModel, String, text
 from sqlmodel.main import SQLModelMetaclass
 
 
 class UUIDModel(SQLModel):
-    """ UID主键模型定义 """
+    """UID主键模型定义."""
+
     uid: uuid.UUID = Field(
         default_factory=uuid.uuid4,
         max_length=36,
@@ -27,57 +29,47 @@ class UUIDModel(SQLModel):
         nullable=False,
         description="UID主键",
         sa_type=String(36),  # 需要制定数据库字段长度，max_length不会设置数据库字段长度
-        sa_column_kwargs={
-            "server_default": text("UUID()")
-        }
+        sa_column_kwargs={"server_default": text("UUID()")},
     )
 
 
 class IDModel(SQLModel):
-    """ 自增ID主键模型定义 """
+    """自增ID主键模型定义."""
+
     id: int | None = Field(
-        default=None,
-        primary_key=True,
-        index=True,
-        nullable=False,
-        description="ID主键"
+        default=None, primary_key=True, index=True, nullable=False, description="ID主键"
     )
 
 
 class TimestampModel(SQLModel):
-    """ 时间公共字段模型定义 """
+    """时间公共字段模型定义."""
+
     create_time: datetime = Field(
         default_factory=partial(datetime.now, UTC),
         nullable=False,
         description="创建时间",
-        sa_column_kwargs={
-            "server_default": text("CURRENT_TIMESTAMP")
-        }
+        sa_column_kwargs={"server_default": text("CURRENT_TIMESTAMP")},
     )
 
     update_time: datetime = Field(
         default_factory=partial(datetime.now, UTC),
         nullable=False,
         description="更新时间",
-        sa_column_kwargs={
-            "server_default": text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
-        }
+        sa_column_kwargs={"server_default": text("CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")},
     )
 
 
 class CommonPropertyModel(SQLModel):
-    """ 其他公共字段模型定义 """
-    is_deleted: bool = Field(
-        default=False,
-        nullable=False,
-        description="是否已删除"
-    )
+    """其他公共字段模型定义."""
+
+    is_deleted: bool = Field(default=False, nullable=False, description="是否已删除")
 
 
 # Automatically set comment to Column using description.
 # https://github.com/tiangolo/sqlmodel/issues/492
 class DescriptionMeta(SQLModelMetaclass):
-    """ 将 description作为字段的comment """
+    """将 description作为字段的comment."""
+
     def __new__(
         cls,
         name: str,
@@ -108,7 +100,8 @@ class DescriptionMeta(SQLModelMetaclass):
 
 
 class Metadata(SQLModel, metaclass=DescriptionMeta):
-    """ 数据库表公共属性模型定义 """
+    """数据库表公共属性模型定义."""
+
     __table_args__ = {
         "mysql_engine": "InnoDB",  # MySQL引擎
         "mysql_charset": "utf8mb4",  # 设置表的字符集
@@ -120,18 +113,19 @@ class Metadata(SQLModel, metaclass=DescriptionMeta):
     @declared_attr.directive
     def __tablename__(cls) -> str:
         snake_case = re.sub(r"(?P<key>[A-Z])", r"_\g<key>", cls.__name__)
-        return snake_case.lower().strip('_')
+        return snake_case.lower().strip("_")
 
 
 class SortModel(SQLModel):
-    """支持模型json序列化的时候按照key进行排序"""
-    @model_serializer(when_used='json')
+    """支持模型json序列化的时候按照key进行排序."""
+
+    @model_serializer(when_used="json")
     def sort_model(self) -> DictType[str, Any]:
         return dict(sorted(self.model_dump().items()))
 
 
 class DatetimeFormatModel(SQLModel):
-    model_config = ConfigDict(json_encoders={datetime: lambda v: v.strftime('%Y-%m-%d %H:%M')})
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.strftime("%Y-%m-%d %H:%M")})
 
 
 class PublicBaseModel(SQLModel):
@@ -144,7 +138,7 @@ class AliasCamelModel(SQLModel):
     def model_dump(
         self,
         *,
-        mode: Literal['json', 'python'] | str = 'python',
+        mode: Literal["json", "python"] | str = "python",
         include=None,
         exclude=None,
         by_alias: bool = False,
@@ -153,10 +147,18 @@ class AliasCamelModel(SQLModel):
         exclude_none: bool = False,
         round_trip: bool = False,
         warnings: bool = True,
-) -> dict[str, Any]:
+    ) -> dict[str, Any]:
         return self.__pydantic_serializer__.to_python(
-            self, mode=mode, include=include, exclude=exclude, by_alias=True,
-            exclude_unset=exclude_unset, exclude_defaults=exclude_defaults,
-            exclude_none=True, round_trip=round_trip, warnings=warnings)
+            self,
+            mode=mode,
+            include=include,
+            exclude=exclude,
+            by_alias=True,
+            exclude_unset=exclude_unset,
+            exclude_defaults=exclude_defaults,
+            exclude_none=True,
+            round_trip=round_trip,
+            warnings=warnings,
+        )
 
     model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)

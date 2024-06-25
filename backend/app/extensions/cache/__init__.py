@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import hashlib
-
 from typing import Callable, Optional
+
 from starlette.requests import Request
 from starlette.responses import Response
 
@@ -22,7 +22,7 @@ def noself_key_builder(
     noself_args = args[1:] if args else args
     cache_key = (
         prefix
-        + hashlib.md5(  # nosec:B303
+        + hashlib.sha256(  # nosec:B303
             f"{func.__module__}:{func.__name__}:{noself_args}:{ordered_kwargs}".encode()
         ).hexdigest()
     )
@@ -44,7 +44,7 @@ def request_key_builder(
     header_params = repr(sorted(request.headers.items()))
     cache_key = (
         prefix
-        + hashlib.md5(
+        + hashlib.sha256(
             f"{request.method.lower()}:{request.url.path}:{query_params}:{header_params}".encode()
         ).hexdigest()
     )

@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 
 from typing import Annotated, Any, Literal, Optional
+
 from pydantic import (
-    AnyUrl,
     AnyHttpUrl,
-    PostgresDsn,
-    MySQLDsn,
-    MariaDBDsn,
-    RedisDsn,
+    AnyUrl,
     BeforeValidator,
+    MariaDBDsn,
+    PostgresDsn,
+    RedisDsn,
     computed_field,
     model_validator,
 )
@@ -23,15 +23,16 @@ def parse_cors(v: Any) -> list[str] | str:
         return v
     raise ValueError(v)
 
+
 class AppConfigSettings(BaseSettings):
-    """应用配置
-    采用pydantic写法, 使用项目根目录下的.env文件来维护项目配置。.env 文件可以按照环境不同进行划分，
+    """应用配置 采用pydantic写法, 使用项目根目录下的.env文件来维护项目配置。.env 文件可以按照环境不同进行划分，
     分为.env、.env.test、.env.prod等, 在启动的时候加载不同的配置文件。
 
     配置项定义方法如下：
     app_name: str = Field(..., env="APP_NAME")  每个配置项都有一个默认值和一个与之关联的环境变量名。
         Field 对象用于指定配置项的默认值和环境变量名。... 表示该配置项是必需的，没有默认值。
     """
+
     APP_ENV: Literal["dev", "test", "prod"] = "dev"
 
     # 应用配置信息
@@ -43,26 +44,33 @@ class AppConfigSettings(BaseSettings):
     API_PREFIX: str = "/api"
 
     # 服务器配置信息
-    HOST: str = "0.0.0.0"
+    HOST: str = "127.0.0.1"
     PORT: int = 8080
-    OPENAPI_URL: Optional[str] = None,  # 属性值设置为 None 时，表示不开启
-    DOCS_URL: Optional[str] = None,  # 属性值设置为 None 时，表示不开启
+    OPENAPI_URL: Optional[str] = (None,)  # 属性值设置为 None 时，表示不开启
+    DOCS_URL: Optional[str] = (None,)  # 属性值设置为 None 时，表示不开启
     REDOC_URL: Optional[str] = None  # 属性值设置为 None 时，表示不开启
-    CORS_ORIGINS: Annotated[
-        list[AnyUrl] | str, BeforeValidator(parse_cors)
-    ] = []
+    CORS_ORIGINS: Annotated[list[AnyUrl] | str, BeforeValidator(parse_cors)] = []
 
     # cookie 配置信息
     COOKIE_KEY: str = "sessionId"  # key name
     COOKIE_MAX_AGE: int = 24 * 60 * 60  # 有效时间
-    COOKIE_NOT_CHECK: list[str] = ["/api/user/login", "/api/user/signup"]  # 不校验 Cookie
+    COOKIE_NOT_CHECK: list[str] = [
+        "/api/user/login",
+        "/api/user/signup",
+    ]  # 不校验 Cookie
 
     # JWT 配置信息
     JWT_SECRET_KEY: str = "75e39662418f7f77877ccacad6486680a1351d1e81cc1876ff9f5493cb8fb7a6"
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRED: int = 60
     JWT_ISS: str = ""
-    JWT_NO_CHECK_URIS: list[str] = ["/","/apidoc","/openapi.json","/api/user/login","/favicon.ico"]
+    JWT_NO_CHECK_URIS: list[str] = [
+        "/",
+        "/apidoc",
+        "/openapi.json",
+        "/api/user/login",
+        "/favicon.ico",
+    ]
 
     # 数据库配置
     DB_HOST: str = "127.0.0.1"
@@ -85,7 +93,7 @@ class AppConfigSettings(BaseSettings):
             host=self.DB_HOST,
             port=self.DB_PORT,
             path=self.DB_DATABASE,
-            query=self.DB_QUERY_STR
+            query=self.DB_QUERY_STR,
         )
 
     @computed_field
@@ -98,7 +106,7 @@ class AppConfigSettings(BaseSettings):
             host=self.DB_HOST,
             port=self.DB_PORT,
             path=self.DB_DATABASE,
-            query=self.DB_QUERY_STR
+            query=self.DB_QUERY_STR,
         )
 
     @computed_field
@@ -111,19 +119,19 @@ class AppConfigSettings(BaseSettings):
             host=self.DB_HOST,
             port=self.DB_PORT,
             path=self.DB_DATABASE,
-            query=self.DB_QUERY_STR
+            query=self.DB_QUERY_STR,
         )
 
     # redis配置
-    REDIS_DSN: RedisDsn = 'redis://127.0.0.1:6379/0'
+    REDIS_DSN: RedisDsn = "redis://127.0.0.1:6379/0"
     # redis settings without username -> redis://:123456@localhost:6379/0
     # aioredis settings -> aioredis://[[username]:[password]]@localhost:6379/0
     REDIS_EXPIRE: int = 24 * 60 * 60  # Redis 过期时长
     REDIS_PREFIX: str = "redis-om"  # Redis 全局前缀
 
     # celery
-    CELERY_BROKER: str = 'redis://127.0.0.1:6379/8'
-    CELERY_BACKEND: str = 'redis://127.0.0.1:6379/8'
+    CELERY_BROKER: str = "redis://127.0.0.1:6379/8"
+    CELERY_BACKEND: str = "redis://127.0.0.1:6379/8"
 
     # email
     SMTP_TLS: bool = True
@@ -153,5 +161,6 @@ class AppConfigSettings(BaseSettings):
         # case_sensitive = True
         # env_prefix = "my_"
     )
+
 
 settings = AppConfigSettings()

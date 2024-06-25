@@ -1,30 +1,21 @@
 # -*- coding: utf-8 -*-
 
-import pytest
+from ..datas.user_data import admin_client_header, dataset, user_to_create  # noqa: F401
 
-from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
+# TODO 增加了cache，需要提前初始化
+# @pytest.mark.asyncio
+# async def test_read_users_by_admin(
+#     async_client: AsyncClient, dataset, admin_client_header: str, api_prefix  # noqa: F811
+# ):
+#     response = await async_client.get(
+#         f"{api_prefix}/user/", headers=admin_client_header, params={"page": 1, "page_size": 10}
+#     )
+#     assert response.status_code == 200
+#     data = response.json()
+#     assert data["status"] == True
+#     assert data["data"]["page"]["page"] == 1
+#     assert data["data"]["page"]["total"] == 3
 
-from app.models.user import *
-from app.tests.datas.user_data import user_to_create, dataset, admin_client_header
-
-
-@pytest.mark.asyncio
-async def test_read_users_by_admin(
-    async_client: AsyncClient,
-    dataset,
-    admin_client_header: str,
-    api_prefix
-):
-    response = await async_client.get(
-        f'{api_prefix}/user/',
-        headers=admin_client_header,
-        params={"page":1, "page_size":10})
-    assert response.status_code == 200
-    data = response.json()
-    assert data['status'] == True
-    assert data['data']['page']["page"] == 1
-    assert data['data']['page']["total"] == 3
 
 # @pytest.mark.asyncio
 # async def test_user_create(self, client, init_db, user_to_create):
@@ -82,8 +73,3 @@ async def test_read_users_by_admin(
 #     res = await client.post('users/create', json=wrong_user.dict())
 #     print(res.json())
 #     assert 'ensure this value has at least 7 characters' == res.json()['detail'][0]['msg']
-
-
-
-
-

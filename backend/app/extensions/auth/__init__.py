@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 
-from jose import  jwt
-from typing import Optional, Annotated
-from datetime import datetime, timedelta, UTC
+from datetime import UTC, datetime, timedelta
+from typing import Annotated, Optional
 
-from pydantic import ValidationError
-from fastapi import HTTPException, Header, Depends, status
+from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
+from jose import jwt
+from pydantic import ValidationError
 
-from app.config import settings
-from app.models.user import User
-from app.services.user import UserService
+from ...config import settings
+from ...models.user import User
+from ...services.user import UserService
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 
@@ -34,12 +34,11 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 
 
 async def get_current_user(
-        token: str = Depends(oauth2_scheme),
-        user_service: UserService = Depends(UserService),
+    token: str = Depends(oauth2_scheme),
+    user_service: UserService = Depends(UserService),
 ) -> User:
-    """
-    验证token
-    :param token:
+    """验证token :param token:
+
     :return: 返回用户信息
     """
     try:
@@ -51,10 +50,10 @@ async def get_current_user(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={
-                'code': 5000,
-                'message': "Token Error",
-                'data': "Token Error",
-            }
+                "code": 5000,
+                "message": "Token Error",
+                "data": "Token Error",
+            },
         )
 
 
@@ -67,6 +66,4 @@ class PermissionChecker:
             for res in user.role.resources:
                 if self.resource_code == res.permission_code:
                     return True
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Permission denied!")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Permission denied!")

@@ -1,16 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from typing import Annotated
 from datetime import timedelta
 
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 
-from app.config import settings
-from app.models.user import *
-from app.services.user import UserService
-from app.apis.user.exception import *
-from app.extensions.auth import create_access_token
+from ..apis.user.exception import UserNotFoundException, UserOrPasswordException
+from ..config import settings
+from ..extensions.auth import create_access_token
+from ..services.user import UserService
 
 # 定制一个不带api prefix的api router，将一些随业务变动不大的api放这里
 base_router = APIRouter()
@@ -43,6 +41,10 @@ async def user_login(
     )
 
     # 返回一个定制的响应体以适配JWT需求
-    return {"status": True, "code": 200, "message":"",
-            "access_token": access_token, "token_type": "bearer"
-        }
+    return {
+        "status": True,
+        "code": 200,
+        "message": "",
+        "access_token": access_token,
+        "token_type": "bearer",
+    }

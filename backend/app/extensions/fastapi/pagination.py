@@ -4,11 +4,13 @@ from typing import Annotated
 
 from fastapi import Depends
 from pydantic import computed_field
-from sqlmodel import SQLModel
+
 from .model import AliasCamelModel
 
+
 class PageModel(AliasCamelModel):
-    """ 分页查询参数 """
+    """分页查询参数."""
+
     page: int = 1
     page_size: int = 10
     total: int | None = None
@@ -35,7 +37,7 @@ class PageModel(AliasCamelModel):
 
 
 def page_query(page: int = 1, page_size: int = 10):
-    """ 获取查询参数 """
+    """获取查询参数."""
     return PageModel(page=page, page_size=page_size)
 
 
