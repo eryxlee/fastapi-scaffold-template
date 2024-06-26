@@ -217,7 +217,7 @@ def handle_validation_exception(exc: RequestValidationError | ValidationError):
         if error.get("type") == "json_invalid":
             message = "json解析失败"
     except Exception:
-        pass
+        message = "json解析失败"
 
     return ApiResponse(
         status=False,
@@ -228,7 +228,7 @@ def handle_validation_exception(exc: RequestValidationError | ValidationError):
     )
 
 
-class APIException(Exception):
+class APIException(Exception):  # noqa: N818
     """Api 通用异常."""
 
     status_code = 200
@@ -244,7 +244,7 @@ class APIException(Exception):
             self.message = message
 
     def __repr__(self):
-        return "<{} {} {}: {}>".format(self.__class__, self.status_code, self.code, self.message)
+        return f"<{self.__class__} {self.status_code} {self.code}: {self.message}>"
 
 
 # class GlobalExceptionHandler:

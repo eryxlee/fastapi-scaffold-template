@@ -95,20 +95,26 @@ class User(TimestampModel, CommonPropertyModel, UserCreate, IDModel, Metadata, t
     )
 
     def verify_password(self, raw_password) -> bool:
+        """密码验证."""
         if isinstance(raw_password, str):
             raw_password = raw_password.encode()
         return bcrypt.checkpw(raw_password, self.password.encode())
 
     @classmethod
-    def encrypt_password(self, raw_password) -> str:
+    def encrypt_password(cls, raw_password) -> str:
+        """密码加密."""
         return bcrypt.hashpw(raw_password.encode(), bcrypt.gensalt(12)).decode()
 
 
 class UserListPage(SQLModel):
+    """API输出用户列表模型, 忽略密码."""
+
     users: List[UserPublic]
     page: PageModel
 
 
 class Token(SQLModel):
+    """JWT Token模型."""
+
     access_token: str
     token_type: str

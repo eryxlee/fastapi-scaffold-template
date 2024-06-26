@@ -50,7 +50,6 @@ async def update_user_me(
     current_user: User = Depends(get_current_user),
 ) -> Any:
     """修改当前用户信息."""
-
     if user_in.name:
         existing_user = await user_service.get_user_by_name(user_in.name)
         if existing_user and existing_user.id != current_user.id:

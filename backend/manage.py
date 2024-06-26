@@ -8,10 +8,10 @@ from dotenv import load_dotenv
 @click.group()
 @click.version_option(version="0.0.1")
 def cli():
-    """命令行管理界面.
+    r"""命令行管理界面.
 
-    本项目几种启动案例：\n # 使用默认设置启动，默认使用.env作为配置文件, log_conf.yaml作为日志文件 \n python manage.py
-    start \n
+    本项目几种启动案例：\n
+    # 使用默认设置启动。环境变量.env, 日志配置log_conf.yaml \n python manage.py start \n
 
     # 使用.env.test作为配置文件 \n python manage.py start --env-file=.env.test \n
 
@@ -29,6 +29,7 @@ def cli():
 @click.option("--env-file", default=".env", help="Project settings file.")
 @click.option("--log-config", default="log_conf.yaml", help="Project logging settings file.")
 def start(env_file, log_config):
+    """启动项目."""
     load_dotenv(env_file)
 
     from app.config import settings
@@ -40,6 +41,7 @@ def start(env_file, log_config):
 @cli.command("init-data")
 @click.option("--env-file", default=".env", help="Project settings file.")
 def init_data(env_file):
+    """项目数据库初始化."""
     load_dotenv(env_file)
 
     import asyncio

@@ -16,6 +16,7 @@ from .extensions.fastapi.middleware import MetaDataAdderMiddleware, TimingMiddle
 
 @asynccontextmanager
 async def lifespan(application: FastAPI):
+    """自定义Fastapi生命周期."""
     # 创建数据库表（如果尚未创建）
     from app.models import init_db
 

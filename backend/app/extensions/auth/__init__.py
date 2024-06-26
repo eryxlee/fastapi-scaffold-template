@@ -16,11 +16,11 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
-    """
+    """创建JWT access token.
 
     :param data: 需要进行JWT令牌加密的数据 (解密的时候会用到)
     :param expires_delta: 令牌有效期
-    :return: token
+    :return: token.
     """
     to_encode = data.copy()
     if expires_delta:
@@ -37,8 +37,9 @@ async def get_current_user(
     token: str = Depends(oauth2_scheme),
     user_service: UserService = Depends(UserService),
 ) -> User:
-    """验证token :param token:
+    """验证JWT access token.
 
+    :param token: 待验证的token
     :return: 返回用户信息
     """
     try:
@@ -58,10 +59,14 @@ async def get_current_user(
 
 
 class PermissionChecker:
+    """权限验证."""
+
     def __init__(self, resource_code):
+        """初始化."""
         self.resource_code = resource_code
 
     def __call__(self, user: Annotated[User, Depends(get_current_user)]):
+        """权限验证."""
         if user.role:
             for res in user.role.resources:
                 if self.resource_code == res.permission_code:

@@ -25,6 +25,7 @@ async_session = sessionmaker(async_engine, class_=Session, expire_on_commit=Fals
 
 
 async def get_session() -> AsyncGenerator[Session, None, None]:
+    """获取数据库访问session."""
     async with async_session() as session:
         yield session
 
@@ -32,6 +33,7 @@ async def get_session() -> AsyncGenerator[Session, None, None]:
 # metadata.create_all doesn't execute asynchronously, so we used run_sync
 # to execute it synchronously within the async function.
 async def init_db() -> None:
+    """初始化数据库."""
     async with async_engine.begin() as conn:
         # await conn.run_sync(SQLModel.metadata.drop_all)
         await conn.run_sync(SQLModel.metadata.create_all)

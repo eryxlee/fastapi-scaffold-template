@@ -5,7 +5,7 @@ from datetime import timedelta
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 
-from ..apis.user.exception import UserNotFoundException, UserOrPasswordException
+from ..apis.user.exception import UserNotFoundException, UserOrPasswordErrorException
 from ..config import settings
 from ..extensions.auth import create_access_token
 from ..services.user import UserService
@@ -16,6 +16,7 @@ base_router = APIRouter()
 
 @base_router.get("/")
 async def helth_check():
+    """心跳检查."""
     return {"message": "Hello, FastAPI!"}
 
 
@@ -24,14 +25,13 @@ async def user_login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     user_service: UserService = Depends(UserService),
 ) -> dict:
-    try:
-        existing_user = await user_service.get_user_by_name(form_data.username)
-        if existing_user:
-            assert existing_user.verify_password(form_data.password)
-        else:
-            raise UserNotFoundException()
-    except AssertionError:
-        raise UserOrPasswordException()
+    """使用请求表单进行用户登录."""
+    existing_user = await user_service.get_user_by_name(form_data.username)
+    if existing_user:
+        if not existing_user.verify_password(form_data.password):
+            raise UserOrPasswordErrorException()
+    else:
+        raise UserNotFoundException()
 
     # 过期时间
     access_token_expires = timedelta(minutes=settings.JWT_EXPIRED)

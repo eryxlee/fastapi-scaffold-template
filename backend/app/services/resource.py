@@ -10,18 +10,19 @@ from ..models.resource import Resource
 
 
 class ResourceService:
+    """资源管理模块业务逻辑类."""
+
     def __init__(self, session: Session = Depends(get_session)):
         self.session = session
 
-    async def get(self, id: int = None) -> Resource | None:
-        return await Resource.get(self.session, Resource, id)
-
     async def get_resource_list_count(self) -> int:
+        """检索资源列表计数."""
         count_statement = select(func.count()).select_from(Resource)
         result = await self.session.exec(count_statement)
         return result.one()
 
     async def get_resource_list(self, offset, limit) -> List[Resource] | None:
+        """检索资源列表."""
         statement = select(Resource).offset(offset).limit(limit)
         result = await self.session.exec(statement)
         return result.all()

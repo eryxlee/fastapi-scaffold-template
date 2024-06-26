@@ -8,7 +8,7 @@ from .role import Role
 from .user import User
 
 
-async def init_data():
+async def init_data():  # noqa: C901
     """初始化表数据."""
     await init_db()
 

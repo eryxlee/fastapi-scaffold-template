@@ -6,9 +6,8 @@ import uuid
 from ast import Dict, Tuple
 from datetime import UTC, datetime
 from functools import partial
-from typing import Any
+from typing import Any, Literal, Type
 from typing import Dict as DictType
-from typing import Literal, Type
 
 from pydantic import ConfigDict, model_serializer
 from pydantic.alias_generators import to_camel
@@ -70,10 +69,10 @@ class CommonPropertyModel(SQLModel):
 class DescriptionMeta(SQLModelMetaclass):
     """将 description作为字段的comment."""
 
-    def __new__(
+    def __new__(  # noqa: D102
         cls,
         name: str,
-        bases: Tuple[Type[Any], ...],
+        bases: Tuple[Type[Any], ...],  # noqa: UP006
         class_dict: Dict[str, Any],
         **kwargs: Any,
     ) -> Any:
@@ -108,10 +107,10 @@ class Metadata(SQLModel, metaclass=DescriptionMeta):
         "mysql_collate": "utf8mb4_general_ci",  # 设置表的校对集
     }
 
-    # 类名转表名
     # https://blog.csdn.net/mouday/article/details/90079956
     @declared_attr.directive
-    def __tablename__(cls) -> str:
+    def __tablename__(cls) -> str:  # noqa: N805
+        """类名转表名."""
         snake_case = re.sub(r"(?P<key>[A-Z])", r"_\g<key>", cls.__name__)
         return snake_case.lower().strip("_")
 
@@ -120,21 +119,28 @@ class SortModel(SQLModel):
     """支持模型json序列化的时候按照key进行排序."""
 
     @model_serializer(when_used="json")
-    def sort_model(self) -> DictType[str, Any]:
+    def sort_model(self) -> DictType[str, Any]:  # noqa: UP006
+        """按照key进行排序."""
         return dict(sorted(self.model_dump().items()))
 
 
 class DatetimeFormatModel(SQLModel):
+    """日期格式化."""
+
     model_config = ConfigDict(json_encoders={datetime: lambda v: v.strftime("%Y-%m-%d %H:%M")})
 
 
 class PublicBaseModel(SQLModel):
+    """输出模型公共部分."""
+
     id: int
     create_time: datetime
     update_time: datetime
 
 
 class AliasCamelModel(SQLModel):
+    """输出Key蛇形命名转驼峰."""
+
     def model_dump(
         self,
         *,
@@ -148,6 +154,7 @@ class AliasCamelModel(SQLModel):
         round_trip: bool = False,
         warnings: bool = True,
     ) -> dict[str, Any]:
+        """Generate a dictionary representation of the model."""
         return self.__pydantic_serializer__.to_python(
             self,
             mode=mode,

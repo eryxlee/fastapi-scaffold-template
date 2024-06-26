@@ -8,6 +8,8 @@ from .role import Role, RoleResourceLink
 
 
 class ResourceBase(SQLModel):
+    """资源基础模型."""
+
     name: str = Field(max_length=32, description="资源名称", sa_type=String(32))
     level: int = Field(default=0, description="层级: 0 目录 1 菜单 2 权限", sa_type=SmallInteger)
     pid: int = Field(default=0, description="父节点id", sa_type=Integer)
@@ -42,6 +44,8 @@ class ResourceBase(SQLModel):
 
 
 class Resource(TimestampModel, CommonPropertyModel, ResourceBase, IDModel, Metadata, table=True):
+    """资源模型."""
+
     roles: list[Role] = Relationship(
         back_populates="resources",
         link_model=RoleResourceLink,

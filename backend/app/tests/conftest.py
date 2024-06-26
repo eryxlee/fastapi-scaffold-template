@@ -26,8 +26,10 @@ from app.config import settings  # noqa: E402
 
 @pytest_asyncio.fixture(scope="session", autouse=True)
 async def testing_db():
-    """创建测试数据库, 并在测试结束时删除 测试数据库名字为 pytest_ + 原库名 TODO 因sqlalchemy_utils
-    不支持异步操作，这里暂且使用同步方式."""
+    """创建测试数据库并在测试结束时删除.
+
+    测试数据库名字为 pytest_ + 原库名 TODO 因sqlalchemy_utils 不支持异步操作，这里暂且使用同步方式.
+    """
     settings.DB_DATABASE = "pytest_" + settings.DB_DATABASE
     sqlalchemy_database_uri = settings.MARIADB_DATABASE_URI.unicode_string()
 

@@ -9,6 +9,8 @@ from ..serializer.json import CustomJsonEncoder
 
 
 class ApiResponse(JSONResponse):
+    """请求统一返回结构体."""
+
     def __init__(
         self,
         status: bool = True,
@@ -17,15 +19,17 @@ class ApiResponse(JSONResponse):
         content: typing.Any = None,
         **options,
     ):
+        """初始化函数."""
         self.status = status
         self.code = code
         self.message = message
 
         # 返回内容体
         body = dict(status=self.status, code=self.code, message=self.message, data=content)
-        super(ApiResponse, self).__init__(content=body, **options)
+        super().__init__(content=body, **options)
 
     def render(self, content: typing.Any) -> bytes:
+        """渲染函数."""
         return json.dumps(
             content,
             ensure_ascii=False,

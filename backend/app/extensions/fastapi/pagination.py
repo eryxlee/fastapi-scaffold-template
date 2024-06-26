@@ -22,17 +22,20 @@ class PageModel(AliasCamelModel):
     # @computed_field
     @property
     def offset(self) -> int:
+        """SQL select offset."""
         return (self.page - 1) * self.page_size
 
     # 如果不希望出现在序列化结果中，就不要加computed_field
     # @computed_field
     @property
     def limit(self) -> int:
+        """SQL select limit."""
         return self.page_size
 
     @computed_field
     @property
     def pages(self) -> int:
+        """总页数."""
         return (self.total - 1) // self.page_size + 1
 
 

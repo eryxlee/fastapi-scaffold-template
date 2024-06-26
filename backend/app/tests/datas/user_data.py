@@ -161,10 +161,11 @@ async def dataset(async_session: AsyncSession):
 
 @pytest_asyncio.fixture(scope="function")
 async def user_to_create():
+    """准备用户创建测试模型."""
     yield UserCreate(
         email="test_client@example.com",
         name="test",
-        password="123456",
+        password="123456",  # noqa: S106
         avatar="test",
         gender=1,
         phone="123456",
@@ -174,6 +175,7 @@ async def user_to_create():
 
 @pytest_asyncio.fixture(scope="function")
 async def admin_client_header(async_client):
+    """准备管理员登录token."""
     admin_user = {"username": "admin", "password": "123456"}
     res = await async_client.post("/login", data=admin_user)
     admin_client_token = res.json()["access_token"]

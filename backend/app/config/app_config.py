@@ -17,6 +17,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 def parse_cors(v: Any) -> list[str] | str:
+    """解析多个cors串."""
     if isinstance(v, str) and not v.startswith("["):
         return [i.strip() for i in v.split(",")]
     elif isinstance(v, list | str):
@@ -25,12 +26,15 @@ def parse_cors(v: Any) -> list[str] | str:
 
 
 class AppConfigSettings(BaseSettings):
-    """应用配置 采用pydantic写法, 使用项目根目录下的.env文件来维护项目配置。.env 文件可以按照环境不同进行划分，
-    分为.env、.env.test、.env.prod等, 在启动的时候加载不同的配置文件。
+    """应用配置类.
+
+    采用pydantic写法, 使用项目根目录下的.env文件来维护项目配置。
+    .env 文件可以按照环境不同进行划分，分为.env、.env.test、.env.prod等,
+    在启动的时候加载不同的配置文件。
 
     配置项定义方法如下：
     app_name: str = Field(..., env="APP_NAME")  每个配置项都有一个默认值和一个与之关联的环境变量名。
-        Field 对象用于指定配置项的默认值和环境变量名。... 表示该配置项是必需的，没有默认值。
+    Field 对象用于指定配置项的默认值和环境变量名。... 表示该配置项是必需的，没有默认值。
     """
 
     APP_ENV: Literal["dev", "test", "prod"] = "dev"
@@ -85,7 +89,8 @@ class AppConfigSettings(BaseSettings):
 
     @computed_field
     @property
-    def POSTGRES_DATABASE_URI(self) -> PostgresDsn:
+    def POSTGRES_DATABASE_URI(self) -> PostgresDsn:  # noqa: N802
+        """构建Postgres数据库连接."""
         return MultiHostUrl.build(
             scheme="postgresql+psycopg",
             username=self.DB_USER,
@@ -98,7 +103,8 @@ class AppConfigSettings(BaseSettings):
 
     @computed_field
     @property
-    def MARIADB_DATABASE_URI(self) -> MariaDBDsn:
+    def MARIADB_DATABASE_URI(self) -> MariaDBDsn:  # noqa: N802
+        """构建mariadb数据库连接."""
         return MultiHostUrl.build(
             scheme="mysql+pymysql",
             username=self.DB_USER,
@@ -111,7 +117,8 @@ class AppConfigSettings(BaseSettings):
 
     @computed_field
     @property
-    def AIO_MARIADB_DATABASE_URI(self) -> MariaDBDsn:
+    def AIO_MARIADB_DATABASE_URI(self) -> MariaDBDsn:  # noqa: N802
+        """构建异步mariadb数据库连接."""
         return MultiHostUrl.build(
             scheme="mysql+aiomysql",
             username=self.DB_USER,
@@ -151,7 +158,8 @@ class AppConfigSettings(BaseSettings):
 
     @computed_field
     @property
-    def EMAILS_ENABLED(self) -> bool:
+    def EMAILS_ENABLED(self) -> bool:  # noqa: N802
+        """是否开启邮件."""
         return bool(self.SMTP_HOST and self.EMAILS_FROM_EMAIL)
 
     # 定义环境变量文件读取方式

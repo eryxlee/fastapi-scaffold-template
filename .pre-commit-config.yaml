@@ -33,44 +33,14 @@ repos:
         args: ["--pytest-test-first"]
         exclude: backend/app/tests/datas/user_data.py
 
-  # import排序，使用参数--trailing-comma，否则会去掉多行import最后的逗号，而black则加上
-  - repo: https://github.com/pycqa/isort
-    rev: 5.13.2
-    hooks:
-      - id: isort
-        args: ["--line-length=100", "--multi-line=3", "--trailing-comma"]
-
-  # 格式化docstring
-  - repo: https://github.com/myint/docformatter
-    rev: v1.7.5
-    hooks:
-      - id: docformatter
-        args: ["--in-place", "--black",]
-
-  # 代码格式化ruff
+  # 代码格式化ruff，使用pyproject.toml中的配置
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.4.10
     hooks:
       # Run the linter.
       - id: ruff
-        args: ["--fix", "--preview", "--exit-non-zero-on-fix", "--line-length=100"]
         # Run the formatter.
       - id: ruff-format
-        args: ["--line-length=100"]
-
-  # 代码格式化black
-  - repo: https://github.com/psf/black
-    rev: 24.4.2
-    hooks:
-      - id: black
-        args: ["--line-length=100"]
-
-  # 代码格式化flake8 rules：https://www.flake8rules.com/
-  - repo: https://github.com/PyCQA/flake8
-    rev: 7.1.0
-    hooks:
-      - id: flake8
-        args: ["--max-line-length=100", "--ignore=E402,E501,E731,W503,W504,F401"]
 
   # 代码安全检测
   - repo: https://github.com/PyCQA/bandit
@@ -79,21 +49,6 @@ repos:
       - id: bandit
         exclude: ^backend/app/tests
         args: ["--severity-level=medium"]
-
-  # 代码格式化autoflake
-  - repo: https://github.com/myint/autoflake
-    rev: v2.3.1
-    hooks:
-      - id: autoflake
-        args:
-          [
-            "--recursive",
-            "--in-place",
-            "--remove-all-unused-imports",
-            "--expand-star-imports",
-            "--remove-unused-variable",
-            "--ignore-init-module-imports",
-          ]
 
   # 检测硬编码的password，key，token等内容
   - repo: https://github.com/gitleaks/gitleaks

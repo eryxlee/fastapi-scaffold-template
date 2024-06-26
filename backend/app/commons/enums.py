@@ -27,6 +27,8 @@ class UserAvailableStatus(IntEnum):
 
 
 class HttpMethodEnum(str, Enum):
+    """HTTP方法."""
+
     GET = "GET"
     POST = "POST"
     HEAD = "HEAD"
