@@ -3,10 +3,10 @@ from __future__ import annotations
 
 import re
 import uuid
-from ast import Dict, Tuple
+from ast import Dict, Tuple  # noqa: TCH003
 from datetime import UTC, datetime
 from functools import partial
-from typing import Any, Literal, Type
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, Type
 from typing import Dict as DictType
 
 from pydantic import ConfigDict, model_serializer
@@ -15,6 +15,9 @@ from pydantic_core import PydanticUndefined
 from sqlalchemy.orm import declared_attr
 from sqlmodel import Field, SQLModel, String, text
 from sqlmodel.main import SQLModelMetaclass
+
+if TYPE_CHECKING:
+    from fastapi.types import IncEx
 
 
 class UUIDModel(SQLModel):
@@ -36,7 +39,11 @@ class IDModel(SQLModel):
     """自增ID主键模型定义."""
 
     id: int | None = Field(
-        default=None, primary_key=True, index=True, nullable=False, description="ID主键"
+        default=None,
+        primary_key=True,
+        index=True,
+        nullable=False,
+        description="ID主键",
     )
 
 
@@ -74,8 +81,8 @@ class DescriptionMeta(SQLModelMetaclass):
         name: str,
         bases: Tuple[Type[Any], ...],  # noqa: UP006
         class_dict: Dict[str, Any],
-        **kwargs: Any,
-    ) -> Any:
+        **kwargs: Any,  # noqa: ANN401
+    ) -> Any:  # noqa: ANN401
         new_class = super().__new__(cls, name, bases, class_dict, **kwargs)
         fields = new_class.model_fields
         for k, field in fields.items():
@@ -87,9 +94,8 @@ class DescriptionMeta(SQLModelMetaclass):
                 else:
                     field.sa_column_kwargs = {"comment": desc}
                 # deal with sa_column
-                if field.sa_column is not PydanticUndefined:
-                    if not field.sa_column.comment:
-                        field.sa_column.comment = desc
+                if field.sa_column is not PydanticUndefined and not field.sa_column.comment:
+                    field.sa_column.comment = desc
                 # deal with attributes of new_class
                 if hasattr(new_class, k):
                     column = getattr(new_class, k)
@@ -101,7 +107,7 @@ class DescriptionMeta(SQLModelMetaclass):
 class Metadata(SQLModel, metaclass=DescriptionMeta):
     """数据库表公共属性模型定义."""
 
-    __table_args__ = {
+    __table_args__: ClassVar[dict[str, str]] = {
         "mysql_engine": "InnoDB",  # MySQL引擎
         "mysql_charset": "utf8mb4",  # 设置表的字符集
         "mysql_collate": "utf8mb4_general_ci",  # 设置表的校对集
@@ -144,9 +150,9 @@ class AliasCamelModel(SQLModel):
     def model_dump(
         self,
         *,
-        mode: Literal["json", "python"] | str = "python",
-        include=None,
-        exclude=None,
+        mode: Literal["json", "python"] = "python",
+        include: IncEx = None,
+        exclude: IncEx = None,
         by_alias: bool = False,
         exclude_unset: bool = False,
         exclude_defaults: bool = False,

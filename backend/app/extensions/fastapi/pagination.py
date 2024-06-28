@@ -39,7 +39,7 @@ class PageModel(AliasCamelModel):
         return (self.total - 1) // self.page_size + 1
 
 
-def page_query(page: int = 1, page_size: int = 10):
+def page_query(page: int = 1, page_size: int = 10) -> PageModel:
     """获取查询参数."""
     return PageModel(page=page, page_size=page_size)
 

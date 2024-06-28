@@ -165,7 +165,7 @@ async def user_to_create():
     yield UserCreate(
         email="test_client@example.com",
         name="test",
-        password="123456",  # noqa: S106
+        password="123456",
         avatar="test",
         gender=1,
         phone="123456",

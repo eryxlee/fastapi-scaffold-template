@@ -15,5 +15,6 @@ class BaseHashModel(HashModel, abc.ABC):
 
         global_key_prefix = "test"
         database = get_redis_connection(
-            url=settings.REDIS_DSN.unicode_string(), decode_responses=True
+            url=settings.REDIS_DSN.unicode_string(),
+            decode_responses=True,
         )

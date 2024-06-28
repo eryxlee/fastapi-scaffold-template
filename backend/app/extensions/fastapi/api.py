@@ -16,19 +16,19 @@ class ApiResponse(JSONResponse):
         status: bool = True,
         code: int = 0,
         message: str = "成功",
-        content: typing.Any = None,
-        **options,
-    ):
+        content: typing.Any = None,  # noqa: ANN401
+        **options: dict[str, typing.Any],
+    ) -> None:
         """初始化函数."""
         self.status = status
         self.code = code
         self.message = message
 
         # 返回内容体
-        body = dict(status=self.status, code=self.code, message=self.message, data=content)
+        body = {"status": self.status, "code": self.code, "message": self.message, "data": content}
         super().__init__(content=body, **options)
 
-    def render(self, content: typing.Any) -> bytes:
+    def render(self, content: typing.Any) -> bytes:  # noqa: ANN401
         """渲染函数."""
         return json.dumps(
             content,

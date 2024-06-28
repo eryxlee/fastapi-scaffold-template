@@ -8,7 +8,7 @@ import json
 class CustomJsonEncoder(json.JSONEncoder):
     """自定义JSON格式化."""
 
-    def default(self, obj):  # noqa: D102
+    def default(self, obj):  # noqa: D102, ANN001, ANN201
         if hasattr(obj, "keys") and hasattr(obj, "__getitem__"):
             return dict(obj)
         if isinstance(obj, datetime.datetime):

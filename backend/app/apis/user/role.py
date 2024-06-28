@@ -16,8 +16,9 @@ router = APIRouter()
     # response_model=UsersPublic,
 )
 async def read_roles(
-    page: PageQueryParam = None, role_service: RoleService = Depends(RoleService)
-) -> Any:
+    page: PageQueryParam = None,
+    role_service: RoleService = Depends(RoleService),
+) -> Any:  # noqa: ANN401
     """Retrieve resources."""
     count = await role_service.get_role_list_count()
     roles = await role_service.get_role_list(page.offset, page.limit)

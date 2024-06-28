@@ -9,7 +9,9 @@ from ...services.user import UserService
 
 @pytest.mark.asyncio(scope="session")
 async def test_create_user(
-    async_session: AsyncSession, user_to_create: UserCreate, dataset
+    async_session: AsyncSession,
+    user_to_create: UserCreate,
+    dataset,
 ) -> None:
     user_service = UserService(async_session)
 

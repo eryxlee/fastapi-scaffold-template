@@ -18,7 +18,7 @@ router = APIRouter()
 async def read_resources(
     page: PageQueryParam = None,
     resource_service: ResourceService = Depends(ResourceService),
-) -> Any:
+) -> Any:  # noqa: ANN401
     """Retrieve resources."""
     count = await resource_service.get_resource_list_count()
     resources = await resource_service.get_resource_list(page.offset, page.limit)

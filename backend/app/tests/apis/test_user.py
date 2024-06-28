@@ -5,7 +5,7 @@ from ..datas.user_data import admin_client_header, dataset, user_to_create  # no
 # TODO 增加了cache，需要提前初始化
 # @pytest.mark.asyncio
 # async def test_read_users_by_admin(
-#     async_client: AsyncClient, dataset, admin_client_header: str, api_prefix  # noqa: F811
+#     async_client: AsyncClient, dataset, admin_client_header: str, api_prefix
 # ):
 #     response = await async_client.get(
 #         f"{api_prefix}/user/", headers=admin_client_header, params={"page": 1, "page_size": 10}

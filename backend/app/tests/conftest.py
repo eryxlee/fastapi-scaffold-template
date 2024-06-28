@@ -18,7 +18,7 @@ load_dotenv(f"{base_path}/.env", override=True)  # TODO 暂时用.env
 from app.config import settings  # noqa: E402
 
 # @pytest.fixture(scope="session", autouse=True)
-# def event_loop(request) -> Generator:  # noqa: indirect usage
+# def event_loop(request) -> Generator:
 #     loop = asyncio.get_event_loop_policy().new_event_loop()
 #     yield loop
 #     loop.close()
@@ -92,6 +92,7 @@ async def async_client(async_session):
 
     app.dependency_overrides[get_session] = lambda: async_session
     async with AsyncClient(
-        transport=ASGITransport(app=app), base_url=f"http://localhost:{settings.PORT}"
+        transport=ASGITransport(app=app),
+        base_url=f"http://localhost:{settings.PORT}",
     ) as client:
         yield client

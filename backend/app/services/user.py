@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from typing import Optional
+
 from fastapi import Depends
 from sqlmodel import func, select
 
@@ -12,7 +14,7 @@ from ..models.user import User, UserCreate, UserUpdate
 class UserService(ServiceBase[User]):
     """用户管理模块业务逻辑."""
 
-    def __init__(self, session: Session = Depends(get_session)):
+    def __init__(self, session: Session = Depends(get_session)) -> None:
         super().__init__(User, session)
 
     async def create(self, user_create: UserCreate) -> User:
@@ -41,9 +43,9 @@ class UserService(ServiceBase[User]):
         await self.update(target_user, **values)
         return target_user
 
-    async def patch(self, id: int, data: UserUpdate) -> User:
+    async def patch(self, id_: int, data: UserUpdate) -> User:
         """通过用户ID修改部分用户信息."""
-        user = await self.get(id=id)
+        user = await self.get(id=id_)
         values = data.model_dump(exclude_unset=True)
 
         if "password" in values:
@@ -54,7 +56,7 @@ class UserService(ServiceBase[User]):
         await self.update(user, **values)
         return user
 
-    async def get_user_by_name(self, username: str = None) -> User | None:
+    async def get_user_by_name(self, username: Optional[str] = None) -> User | None:
         """通过用户名检索用户."""
         statement = select(User).where(User.name == username)
         results = await self.session.exec(statement=statement)
@@ -66,7 +68,7 @@ class UserService(ServiceBase[User]):
         result = await self.session.exec(count_statement)
         return result.one()
 
-    async def get_user_list(self, offset, limit) -> User | None:
+    async def get_user_list(self, offset: int, limit: int) -> User | None:
         """检索用户列表."""
         statement = select(User).offset(offset).limit(limit)
         result = await self.session.exec(statement)

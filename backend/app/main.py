@@ -15,15 +15,17 @@ from .extensions.fastapi.middleware import MetaDataAdderMiddleware, TimingMiddle
 
 
 @asynccontextmanager
-async def lifespan(application: FastAPI):
+async def lifespan(application: FastAPI):  # noqa: ANN201
     """自定义Fastapi生命周期."""
-    # 创建数据库表（如果尚未创建）
+    # 创建数据库表(如果尚未创建)
     from app.models import init_db
 
     await init_db()
-    # 创建redis链接，并赋值给app.state
+    # 创建redis链接, 并赋值给app.state
     pool = redis.ConnectionPool.from_url(
-        settings.REDIS_DSN.unicode_string(), encoding="utf8", decode_responses=True
+        settings.REDIS_DSN.unicode_string(),
+        encoding="utf8",
+        decode_responses=True,
     )
     client = redis.Redis(connection_pool=pool)
     app.state.redis = client

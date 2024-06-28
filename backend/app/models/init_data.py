@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from sqlmodel import func, select
+from sqlmodel import Select, SelectOfScalar, func, select
 
 from . import async_session, init_db
 from .resource import Resource
@@ -8,14 +8,14 @@ from .role import Role
 from .user import User
 
 
-async def init_data():  # noqa: C901
+async def init_data() -> None:  # noqa: C901, PLR0915, PLR0912
     """初始化表数据."""
     await init_db()
 
     async with async_session() as session:
         # 新增资源
 
-        def get_select_resource_stmt(name):
+        def get_select_resource_stmt(name: str) -> Select | SelectOfScalar:
             return select(func.count(Resource.id)).where(Resource.name == name)
 
         resource1 = resource2 = resource3 = resource4 = resource5 = None
@@ -136,7 +136,7 @@ async def init_data():  # noqa: C901
             session.refresh(resource10)
 
         # 新增角色
-        def get_select_role_stmt(code):
+        def get_select_role_stmt(code: str) -> Select | SelectOfScalar:
             return select(func.count(Role.id)).where(Role.code == code)
 
         role_admin = role_user = role_audit = None
@@ -168,7 +168,7 @@ async def init_data():  # noqa: C901
             session.refresh(role_audit)
 
         # 新增预置用户
-        def get_select_user_stmt(name):
+        def get_select_user_stmt(name: str) -> Select | SelectOfScalar:
             return select(func.count(User.id)).where(User.name == name)
 
         if await session.scalar(get_select_user_stmt("admin")) == 0:

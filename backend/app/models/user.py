@@ -44,7 +44,10 @@ class UserBase(SQLModel):
         sa_type=String(128),
     )
     gender: int | None = Field(
-        default=None, nullable=True, description="性别", sa_type=SmallInteger
+        default=None,
+        nullable=True,
+        description="性别",
+        sa_type=SmallInteger,
     )
     phone: str | None = Field(
         default=None,
@@ -91,17 +94,18 @@ class User(TimestampModel, CommonPropertyModel, UserCreate, IDModel, Metadata, t
 
     # 多对一关系，需要定义一个role_id字段
     role: Optional["Role"] = Relationship(  # noqa: F821
-        back_populates="users", sa_relationship_kwargs={"lazy": "joined"}
+        back_populates="users",
+        sa_relationship_kwargs={"lazy": "joined"},
     )
 
-    def verify_password(self, raw_password) -> bool:
+    def verify_password(self, raw_password: str) -> bool:
         """密码验证."""
         if isinstance(raw_password, str):
             raw_password = raw_password.encode()
         return bcrypt.checkpw(raw_password, self.password.encode())
 
     @classmethod
-    def encrypt_password(cls, raw_password) -> str:
+    def encrypt_password(cls, raw_password: str) -> str:
         """密码加密."""
         return bcrypt.hashpw(raw_password.encode(), bcrypt.gensalt(12)).decode()
 

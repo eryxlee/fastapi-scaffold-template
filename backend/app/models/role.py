@@ -30,7 +30,8 @@ class Role(TimestampModel, CommonPropertyModel, RoleBase, IDModel, Metadata, tab
     """角色模型."""
 
     users: list["User"] = Relationship(  # noqa: F821
-        back_populates="role", sa_relationship_kwargs={"lazy": "selectin"}
+        back_populates="role",
+        sa_relationship_kwargs={"lazy": "selectin"},
     )
     resources: list["Resource"] = Relationship(  # noqa: F821
         back_populates="roles",

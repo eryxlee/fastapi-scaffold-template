@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from typing import Annotated, Any, Literal, Optional
+from typing import Annotated, Literal, Optional
 
 from pydantic import (
     AnyHttpUrl,
@@ -16,11 +16,11 @@ from pydantic_core import MultiHostUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-def parse_cors(v: Any) -> list[str] | str:
+def parse_cors(v: str) -> list[str] | str:
     """解析多个cors串."""
     if isinstance(v, str) and not v.startswith("["):
         return [i.strip() for i in v.split(",")]
-    elif isinstance(v, list | str):
+    if isinstance(v, list | str):
         return v
     raise ValueError(v)
 
@@ -151,7 +151,7 @@ class AppConfigSettings(BaseSettings):
     EMAILS_FROM_NAME: str | None = None
 
     @model_validator(mode="after")
-    def _set_default_emails_from(self):
+    def _set_default_emails_from(self):  # noqa: ANN202
         if not self.EMAILS_FROM_NAME:
             self.EMAILS_FROM_NAME = self.APP_NAME
         return self
@@ -164,7 +164,7 @@ class AppConfigSettings(BaseSettings):
 
     # 定义环境变量文件读取方式
     model_config = SettingsConfigDict(
-        env_file_encoding="utf-8"  # 指定环境变量文件的编码
+        env_file_encoding="utf-8",  # 指定环境变量文件的编码
         # env_file = ".env"
         # case_sensitive = True
         # env_prefix = "my_"

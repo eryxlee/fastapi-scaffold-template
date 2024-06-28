@@ -12,7 +12,7 @@ from ..models.role import Role
 class RoleService:
     """角色管理业务逻辑类."""
 
-    def __init__(self, session: Session = Depends(get_session)):
+    def __init__(self, session: Session = Depends(get_session)) -> None:
         self.session = session
 
     async def get_role_list_count(self) -> int:
@@ -21,7 +21,7 @@ class RoleService:
         result = await self.session.exec(count_statement)
         return result.one()
 
-    async def get_role_list(self, offset, limit) -> List[Role] | None:
+    async def get_role_list(self, offset: int, limit: int) -> List[Role] | None:
         """检索角色列表."""
         statement = select(Role).offset(offset).limit(limit)
         result = await self.session.exec(statement)

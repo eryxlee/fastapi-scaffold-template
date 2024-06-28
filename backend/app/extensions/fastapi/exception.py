@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
-from typing import Any, List, Optional
+from typing import List, Optional
 
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
@@ -121,7 +121,7 @@ error_message = {
 }
 
 
-def parse_error(err: Any, field_names: List, raw: bool = True) -> Optional[dict]:
+def parse_error(err: dict, field_names: List, raw: bool = True) -> Optional[dict]:
     """Parse single error object (such as pydantic-based or fastapi-based) to dict.
 
     :param err: Error object
@@ -142,25 +142,17 @@ def parse_error(err: Any, field_names: List, raw: bool = True) -> Optional[dict]
         message = err["msg"]
 
     if not raw:
-        if len(err["loc"]) == 2:
+        if len(err["loc"]) == 2:  # noqa: PLR2004
             if str(err["loc"][0]) in ["body", "query"]:
                 name = str(err["loc"][1])
             else:
                 name = str(err["loc"][0])
         elif len(err["loc"]) == 1:
-            if str(err["loc"][0]) == "body":
-                name = "__all__"
-            else:
-                name = str(err["loc"][0])
+            name = "__all__" if str(err["loc"][0]) == "body" else str(err["loc"][0])
         else:
             name = "__all__"
     else:
-        if len(err["loc"]) == 2:
-            name = str(err["loc"][0])
-        elif len(err["loc"]) == 1:
-            name = str(err["loc"][0])
-        else:
-            name = "__all__"
+        name = str(err["loc"][0]) if len(err["loc"]) >= 1 else "__all__"
 
     if name in field_names:
         return None
@@ -185,10 +177,10 @@ def raw_errors_to_fields(raw_errors: List) -> List[dict]:
                 # This is a special case when errors happen both in request
                 # handling & internal validation
                 if isinstance(err, list):
-                    err = err[0]
+                    err = err[0]  # noqa: PLW2901
                 field_err = parse_error(
                     err,
-                    field_names=list(map(lambda x: x["name"], fields)),
+                    field_names=[x["name"] for x in fields],
                     raw=True,
                 )
                 if field_err is not None:
@@ -196,7 +188,7 @@ def raw_errors_to_fields(raw_errors: List) -> List[dict]:
         else:
             field_err = parse_error(
                 top_err,
-                field_names=list(map(lambda x: x["name"], fields)),
+                field_names=[x["name"] for x in fields],
                 raw=False,
             )
             if field_err is not None:
@@ -204,7 +196,9 @@ def raw_errors_to_fields(raw_errors: List) -> List[dict]:
     return fields
 
 
-def handle_validation_exception(exc: RequestValidationError | ValidationError):
+def handle_validation_exception(
+    exc: RequestValidationError | ValidationError,
+) -> ApiResponse:
     """数据验证异常处理.
 
     :param exc:
@@ -235,7 +229,12 @@ class APIException(Exception):  # noqa: N818
     code = 10000
     message = "A server error occurred."
 
-    def __init__(self, status_code=None, code=None, message=None):
+    def __init__(
+        self,
+        status_code: Optional[int] = None,
+        code: Optional[int] = None,
+        message: Optional[str] = None,
+    ) -> None:
         if status_code is not None:
             self.status_code = status_code
         if code is not None:
@@ -243,16 +242,19 @@ class APIException(Exception):  # noqa: N818
         if message is not None:
             self.message = message
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<{self.__class__} {self.status_code} {self.code}: {self.message}>"
 
 
 # class GlobalExceptionHandler:
-def register_global_exception(app: FastAPI):
+def register_global_exception(app: FastAPI) -> None:
     """注册全局异常处理处理逻辑."""
 
     @app.exception_handler(RequestValidationError)
-    async def fastapi_validation_exception_handler(request: Request, exc: RequestValidationError):
+    async def fastapi_validation_exception_handler(
+        request: Request,
+        exc: RequestValidationError,
+    ) -> ApiResponse:
         """Fastapi 数据验证异常处理.
 
         :param request:
@@ -262,7 +264,10 @@ def register_global_exception(app: FastAPI):
         return handle_validation_exception(exc)
 
     @app.exception_handler(ValidationError)
-    async def pydantic_validation_exception_handler(request: Request, exc: ValidationError):
+    async def pydantic_validation_exception_handler(
+        request: Request,
+        exc: ValidationError,
+    ) -> ApiResponse:
         """Pydantic 数据验证异常处理.
 
         :param request:
@@ -272,7 +277,10 @@ def register_global_exception(app: FastAPI):
         return await handle_validation_exception(exc)
 
     @app.exception_handler(APIException)
-    async def handle_api_exception(request: Request, exc: APIException):
+    async def handle_api_exception(
+        request: Request,
+        exc: APIException,
+    ) -> ApiResponse:
         """自定义API异常处理.
 
         :param request:
@@ -287,7 +295,10 @@ def register_global_exception(app: FastAPI):
         )
 
     @app.exception_handler(HTTPException)
-    async def http_exception_handler(request: Request, exc: HTTPException):
+    async def http_exception_handler(
+        request: Request,
+        exc: HTTPException,
+    ) -> ApiResponse:
         """全局HTTP异常处理.
 
         :param request:
@@ -308,7 +319,7 @@ def register_global_exception(app: FastAPI):
         )
 
     @app.exception_handler(Exception)
-    async def handle_exception(request: Request, exc: Exception):
+    async def handle_exception(request: Request, exc: Exception) -> ApiResponse:
         """未知异常处理.
 
         :param request:
@@ -318,7 +329,7 @@ def register_global_exception(app: FastAPI):
         return ApiResponse(
             status=False,
             code=500,  # 未知错误都归结于500
-            message=(f"在链接 {request.url} 处使用 {request.method} 出错." f" 出错信息为 {exc!r}."),
+            message=(f"在链接 {request.url} 处使用 {request.method} 出错. 出错信息为 {exc!r}."),
             status_code=500,
         )
 

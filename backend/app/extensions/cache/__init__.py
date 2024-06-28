@@ -23,13 +23,12 @@ def noself_key_builder(
     prefix = f"{FastAPICache.get_prefix()}:{namespace}:"
     ordered_kwargs = sorted(kwargs.items())
     noself_args = args[1:] if args else args
-    cache_key = (
+    return (
         prefix
         + hashlib.sha256(  # nosec:B303
-            f"{func.__module__}:{func.__name__}:{noself_args}:{ordered_kwargs}".encode()
+            f"{func.__module__}:{func.__name__}:{noself_args}:{ordered_kwargs}".encode(),
         ).hexdigest()
     )
-    return cache_key
 
 
 def request_key_builder(
@@ -48,11 +47,9 @@ def request_key_builder(
     prefix = f"{FastAPICache.get_prefix()}:{namespace}:"
     query_params = repr(sorted(request.query_params.items()))
     header_params = repr(sorted(request.headers.items()))
-    cache_key = (
+    return (
         prefix
         + hashlib.sha256(
-            f"{request.method.lower()}:{request.url.path}:{query_params}:{header_params}".encode()
+            f"{request.method.lower()}:{request.url.path}:{query_params}:{header_params}".encode(),
         ).hexdigest()
     )
-
-    return cache_key

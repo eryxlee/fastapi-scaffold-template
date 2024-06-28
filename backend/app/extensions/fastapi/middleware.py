@@ -3,6 +3,7 @@
 import json
 import time
 from datetime import datetime, timedelta
+from typing import ClassVar
 
 from fastapi import Request, Response
 from fastapi.responses import JSONResponse
@@ -27,7 +28,7 @@ class TimingMiddleware(BaseHTTPMiddleware):
 class MetaDataAdderMiddleware:
     """将API输出结果进行统一格式化的中间件."""
 
-    application_generic_urls = [
+    application_generic_urls: ClassVar[list[str]] = [
         "/openapi.json",
         "/docs",
         "/docs/oauth2-redirect",
@@ -41,13 +42,11 @@ class MetaDataAdderMiddleware:
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:  # noqa: D102
         if scope["type"] == "http" and not any(
-            [
-                scope["path"].startswith(endpoint)
-                for endpoint in MetaDataAdderMiddleware.application_generic_urls
-            ]
+            scope["path"].startswith(endpoint)
+            for endpoint in MetaDataAdderMiddleware.application_generic_urls
         ):
             responder = MetaDataAdderMiddlewareResponder(
-                self.app
+                self.app,
             )  # , self.standard_meta_data, self.additional_custom_information)
             await responder(scope, receive, send)
             return
@@ -68,7 +67,7 @@ class MetaDataAdderMiddlewareResponder:
         self.send = send
         await self.app(scope, receive, self.send_with_meta_response)
 
-    async def send_with_meta_response(self, message: Message):
+    async def send_with_meta_response(self, message: Message) -> None:
         """修改response信息."""
         message_type = message["type"]
         if message_type == "http.response.start":
@@ -108,12 +107,12 @@ class RateLimitingMiddleware(BaseHTTPMiddleware):
     RATE_LIMIT_DURATION = timedelta(minutes=1)
     RATE_LIMIT_REQUESTS = 3
 
-    def __init__(self, app):
+    def __init__(self, app) -> None:  # noqa: ANN001
         super().__init__(app)
         # Dictionary to store request counts for each IP
         self.request_counts = {}
 
-    async def dispatch(self, request, call_next):  # noqa: D102
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint):  # noqa: D102, ANN201
         # Get the client's IP address
         client_ip = request.client.host
 
@@ -121,7 +120,7 @@ class RateLimitingMiddleware(BaseHTTPMiddleware):
         request_count, last_request = self.request_counts.get(client_ip, (0, datetime.min))
 
         # Calculate the time elapsed since the last request
-        elapsed_time = datetime.now() - last_request
+        elapsed_time = datetime.now() - last_request  # noqa: DTZ005
 
         if elapsed_time > self.RATE_LIMIT_DURATION:
             # If the elapsed time is greater than the rate limit duration, reset the count
@@ -137,8 +136,7 @@ class RateLimitingMiddleware(BaseHTTPMiddleware):
             request_count += 1
 
         # Update the request count and last request timestamp for the IP
-        self.request_counts[client_ip] = (request_count, datetime.now())
+        self.request_counts[client_ip] = (request_count, datetime.now())  # noqa: DTZ005
 
         # Proceed with the request
-        response = await call_next(request)
-        return response
+        return await call_next(request)
