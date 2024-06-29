@@ -96,14 +96,10 @@ ignore = [
     "B008",   # Do not perform function call in argument defaults (not fastapi style)
     "ANN101", # self arguments have type annotations, deprecated
     "ANN102", # cls arguments have type annotations, deprecated
-    "PLR0913",# Too many arguments in function definition
     "RUF001", # String contains ambiguous unicode character (chinese char)
     "RUF002", # Docstring contains ambiguous unicode character (chinese comment)
     "RUF003", # Comment contains ambiguous unicode character (chinese comment)
 ]
-
-[tool.ruff.lint.pydocstyle]
-convention = "google"
 
 [tool.ruff.lint.mccabe]
 max-complexity = 15
@@ -111,3 +107,9 @@ max-complexity = 15
 [tool.ruff.lint.per-file-ignores]
 "**/app/tests/*" = ["D", "S", "T20", "ANN"] # Don't check this rules in unittest
 "__init__.py" = ["F401"] # Allow unused import in __init__.py
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.pylint]
+max-args = 20 # some api callbacks need lots of args
