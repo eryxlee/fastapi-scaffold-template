@@ -1,16 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from typing import Any
-
 import pytest
 from httpx import AsyncClient
 from starlette.status import (
     HTTP_200_OK,
     HTTP_400_BAD_REQUEST,
 )
-
-from ...models.user import UserCreate
-from ..datas.user_data import dataset, user_to_create  # noqa: F401
 
 
 @pytest.mark.asyncio(scope="session")
@@ -22,14 +17,14 @@ async def test_user_login_with_non_existing_username(async_client: AsyncClient) 
 
 @pytest.mark.asyncio(scope="session")
 async def test_user_login_with_wrong_password(
+    setup_initial_dataset,
     async_client: AsyncClient,
-    user_to_create: UserCreate,  # noqa: F811
-    dataset: Any,  # noqa: F811
-    api_prefix: str,
+    user_payload,
+    api_prefix,
 ) -> None:
     # Create the user
-    res = await async_client.post(f"{api_prefix}/user/signup", json=user_to_create.model_dump())
-    assert res.json()["data"]["name"] == user_to_create.name
+    res = await async_client.post(f"{api_prefix}/user/signup", json=user_payload.model_dump())
+    assert res.json()["data"]["name"] == user_payload.name
     user_id = res.json()["data"]["id"]
 
     # Try to login with wrong password
@@ -42,15 +37,15 @@ async def test_user_login_with_wrong_password(
 
 
 @pytest.mark.asyncio(scope="session")
-async def test_user_login_with_success(
+async def test_user_login_successful(
+    setup_initial_dataset,
     async_client: AsyncClient,
-    user_to_create: UserCreate,  # noqa: F811
-    dataset: Any,  # noqa: F811
-    api_prefix: str,
+    user_payload,
+    api_prefix,
 ) -> None:
     # Create the user
-    res = await async_client.post(f"{api_prefix}/user/signup", json=user_to_create.model_dump())
-    assert res.json()["data"]["name"] == user_to_create.name
+    res = await async_client.post(f"{api_prefix}/user/signup", json=user_payload.model_dump())
+    assert res.json()["data"]["name"] == user_payload.name
     user_id = res.json()["data"]["id"]
 
     # Try to login with wrong password

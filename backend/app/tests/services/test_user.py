@@ -3,17 +3,16 @@
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...models.user import UserCreate
-from ...services.user import UserService
-
 
 @pytest.mark.asyncio(scope="session")
 async def test_create_user(
+    setup_initial_dataset,
     async_session: AsyncSession,
-    user_to_create: UserCreate,
-    dataset,
+    user_payload,
 ) -> None:
+    from ...services.user import UserService
+
     user_service = UserService(async_session)
 
-    ouser = await user_service.create(user_to_create)
+    ouser = await user_service.create(user_payload)
     assert ouser.id != 0

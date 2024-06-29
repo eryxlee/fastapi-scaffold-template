@@ -1,20 +1,29 @@
 # -*- coding: utf-8 -*-
+import pytest
+from httpx import AsyncClient
+from starlette.status import (
+    HTTP_200_OK,
+)
 
-from ..datas.user_data import admin_client_header, dataset, user_to_create  # noqa: F401
 
-# TODO 增加了cache，需要提前初始化
-# @pytest.mark.asyncio
-# async def test_read_users_by_admin(
-#     async_client: AsyncClient, dataset, admin_client_header: str, api_prefix
-# ):
-#     response = await async_client.get(
-#         f"{api_prefix}/user/", headers=admin_client_header, params={"page": 1, "page_size": 10}
-#     )
-#     assert response.status_code == 200
-#     data = response.json()
-#     assert data["status"] == True
-#     assert data["data"]["page"]["page"] == 1
-#     assert data["data"]["page"]["total"] == 3
+@pytest.mark.asyncio()
+async def test_read_users_by_admin(
+    setup_initial_dataset,
+    setup_redis_cache,
+    async_client: AsyncClient,
+    api_prefix: str,
+    header_payload_admin: str,
+):
+    response = await async_client.get(
+        f"{api_prefix}/user/",
+        headers=header_payload_admin,
+        params={"page": 1, "page_size": 10},
+    )
+    assert response.status_code == HTTP_200_OK
+    data = response.json()
+    assert data["status"] == True  # noqa: E712
+    assert data["data"]["page"]["page"] == 1
+    assert data["data"]["page"]["total"] == 3  # noqa: PLR2004
 
 
 # @pytest.mark.asyncio
