@@ -2,40 +2,26 @@
 
 from contextlib import asynccontextmanager
 
-import redis.asyncio as redis
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi_cache import FastAPICache
-from fastapi_cache.backends.redis import RedisBackend
 
 from .apis import api_router, base_router
 from .config import settings
 from .extensions.fastapi.exception import register_global_exception
 from .extensions.fastapi.middleware import MetaDataAdderMiddleware, TimingMiddleware
+from .models import init_db
+from .models.redis import build_redis_cache
 
 
 @asynccontextmanager
 async def lifespan(application: FastAPI):  # noqa: ANN201
     """自定义Fastapi生命周期."""
     # 创建数据库表(如果尚未创建)
-    from app.models import init_db
-
     await init_db()
-    # 创建redis链接, 并赋值给app.state
-    pool = redis.ConnectionPool.from_url(
-        settings.REDIS_DSN.unicode_string(),
-        encoding="utf8",
-        decode_responses=True,
-    )
-    client = redis.Redis(connection_pool=pool)
-    app.state.redis = client
-    # 初始化FastAPICache
-    FastAPICache.init(RedisBackend(client), prefix="fastapi-cache")
 
-    yield
-
-    await client.aclose()
-    await pool.aclose()
+    async with build_redis_cache(settings) as client:
+        app.state.redis = client
+        yield
 
 
 # 创建 FastAPI 应用实例
