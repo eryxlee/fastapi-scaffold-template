@@ -6,6 +6,7 @@ import bcrypt
 from pydantic import EmailStr
 from sqlmodel import Field, Relationship, SmallInteger, SQLModel, String
 
+from ..extensions.fastapi.custom_type import ChinesePhoneNumber
 from ..extensions.fastapi.model import (
     AliasCamelModel,
     CommonPropertyModel,
@@ -23,7 +24,6 @@ class UserBase(SQLModel):
     """用户模型公共部分."""
 
     name: str = Field(
-        default=None,
         max_length=60,
         nullable=False,
         description="用户名",
@@ -49,9 +49,8 @@ class UserBase(SQLModel):
         description="性别",
         sa_type=SmallInteger,
     )
-    phone: str | None = Field(
+    phone: ChinesePhoneNumber | None = Field(
         default=None,
-        max_length=36,
         nullable=True,
         description="电话",
         sa_type=String(36),
