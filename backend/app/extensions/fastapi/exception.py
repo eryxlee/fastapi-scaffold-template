@@ -274,7 +274,7 @@ def register_global_exception(app: FastAPI) -> None:
         :param exc:
         :return:
         """
-        return await handle_validation_exception(exc)
+        return handle_validation_exception(exc)
 
     @app.exception_handler(APIException)
     async def handle_api_exception(
