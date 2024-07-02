@@ -66,7 +66,7 @@ async def test_user_create_wrong_email_format(
 
     wrong_user = UserCreate(
         email="wrong.user@gmail.com",
-        username="wrong_user",
+        name="wrong_user",
         password="wrong_user_password",
     )
 
@@ -86,7 +86,7 @@ async def test_user_create_wrong_password_format(
 
     wrong_user = UserCreate(
         email="wrong.user@gmail.com",
-        username="wrong_user",
+        name="wrong_user",
         password="wrong_user_password",
     )
 

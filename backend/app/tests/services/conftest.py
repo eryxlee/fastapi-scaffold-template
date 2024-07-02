@@ -14,6 +14,6 @@ async def user_payload():
         password="123456",
         avatar="test",
         gender=1,
-        phone="123456",
+        phone="15800001111",
         role_id=1,
     )
