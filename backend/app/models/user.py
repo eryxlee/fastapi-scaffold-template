@@ -4,8 +4,10 @@ from typing import List, Optional
 
 import bcrypt
 from pydantic import EmailStr
+from sqlalchemy.dialects import mysql
 from sqlmodel import Field, Relationship, SmallInteger, SQLModel, String
 
+from ..commons.enums import UserGender
 from ..extensions.fastapi.custom_type import ChinesePhoneNumber
 from ..extensions.fastapi.model import (
     AliasCamelModel,
@@ -43,11 +45,11 @@ class UserBase(SQLModel):
         description="邮件",
         sa_type=String(128),
     )
-    gender: int | None = Field(
+    gender: UserGender | None = Field(
         default=None,
         nullable=True,
         description="性别",
-        sa_type=SmallInteger,
+        sa_type=mysql.TINYINT,
     )
     phone: ChinesePhoneNumber | None = Field(
         default=None,
