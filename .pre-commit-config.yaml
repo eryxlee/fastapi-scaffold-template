@@ -1,6 +1,10 @@
 default_language_version:
   python: python3.11
 
+default_install_hook_types: [pre-commit, pre-push, commit-msg]
+
+default_stages: [commit]
+
 exclude: |
     (?x)^(
         backend/.vscode/
@@ -73,8 +77,8 @@ repos:
   - repo: local
     hooks:
       - id: tests
-        name: run tests
-        entry: pytest -x
+        name: run all tests
+        entry: pytest -x --suppress-no-test-exit-code
         language: system
         types: [python]
         stages: [push]
