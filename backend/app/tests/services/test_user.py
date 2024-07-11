@@ -4,7 +4,7 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-@pytest.mark.asyncio(scope="session")
+@pytest.mark.asyncio()
 async def test_create_user(
     setup_initial_dataset,
     async_session: AsyncSession,

@@ -13,7 +13,13 @@ from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession as Session
 
 # @pytest.fixture(scope="session", autouse=True)
-# def event_loop(request) -> Generator:
+# def event_loop(request):
+#     """Replacing the event_loop fixture with a custom implementation is deprecated
+#     and will lead to errors in the future.
+#     If you want to request an asyncio event loop with a scope other than function
+#     scope, use the "scope" argument to the asyncio mark when marking the tests.
+#     If you want to return different types of event loops, use the event_loop_policy
+#     fixture."""
 #     loop = asyncio.get_event_loop_policy().new_event_loop()
 #     yield loop
 #     loop.close()

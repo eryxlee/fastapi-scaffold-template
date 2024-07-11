@@ -4,7 +4,7 @@ import pytest_asyncio
 
 
 @pytest_asyncio.fixture()
-async def user_payload():
+async def user_payload(scope="function"):
     """准备用户创建测试模型."""
     from ...models.user import UserCreate
 
@@ -19,7 +19,7 @@ async def user_payload():
     )
 
 
-@pytest_asyncio.fixture()
+@pytest_asyncio.fixture(scope="function")
 async def header_payload_admin(async_client):
     """准备管理员登录token."""
     admin_user = {"username": "admin", "password": "123456"}
